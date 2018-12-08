@@ -4,6 +4,8 @@
 #include "Vector3f.h"
 #include "Camera.h"
 #include "Collidable.h"
+#include "LinkedList.h"
+#include "Node.h"
 #include <glut.h>
 #include <cmath>
 
@@ -32,7 +34,7 @@ Model_3DS model_skeleton;
 
 // Collidable Variables
 Collidable player;
-Collidable skeleton;
+LinkedList enemies;
 
 // Textures
 GLTexture tex_ground;
@@ -202,10 +204,43 @@ void axes(double length) {
 }
 
 //=======================================================================
+// Draw Crosshairs
+//=======================================================================
+void drawCrosshairs() {
+	glPushMatrix();
+	{
+		glViewport(0, 0, WIDTH, HEIGHT);
+		glMatrixMode(GL_PROJECTION);
+		glLoadIdentity();
+		glOrtho(0, WIDTH, HEIGHT, 0, -1, 1);
+		glMatrixMode(GL_MODELVIEW);
+		glLoadIdentity();
+
+		glColor3f(0.0f, 0.0f, 0.0f);
+		glLineWidth(3.0);
+		//horizontal line
+		glBegin(GL_LINES);
+		{
+			glVertex2i(WIDTH / 2 - 10, HEIGHT / 2);
+			glVertex2i(WIDTH / 2 + 10, HEIGHT / 2);
+		}
+		glEnd();
+		//vertical line
+		glBegin(GL_LINES);
+		{
+			glVertex2i(WIDTH / 2, HEIGHT / 2 + 10);
+			glVertex2i(WIDTH / 2, HEIGHT / 2 - 10);
+		}
+		glEnd();
+		glColor3f(1.0f, 1.0f, 1.0f);
+	}
+	glPopMatrix();
+}
+
+//=======================================================================
 // Display Function
 //=======================================================================
-void myDisplay(void)
-{
+void myDisplay(void) {
 	setupCamera();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -215,7 +250,12 @@ void myDisplay(void)
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
 
-	bool collision = player & skeleton;
+	bool collision = false;
+	Node* current = enemies.head;
+	while (current) {
+		collision |= (player & *(current->data));
+		current = current->next;
+	}
 
 	if (collision) {
 		glPushMatrix();
@@ -260,12 +300,17 @@ void myDisplay(void)
 	}
 	glPopMatrix();
 
-	// Draw Skeleton Model
-	glPushMatrix();
-	{
-		skeleton.draw();
+	// Draw Enemy Models
+	current = enemies.head;
+	while (current) {
+		glPushMatrix();
+		{
+			(*(current->data)).draw();
+		}
+		glPopMatrix();
+
+		current = current->next;
 	}
-	glPopMatrix();
 
 	if (showBounds) {
 		// Draw Player Bounding Sphere
@@ -280,16 +325,21 @@ void myDisplay(void)
 		// Draw Skeleton Bounding Sphere
 		glColor4f(0.0, 0.0, 0.5, 0.5);
 
-		glPushMatrix();
-		{
-			skeleton.drawBounds();
+		current = enemies.head;
+		while (current) {
+			glPushMatrix();
+			{
+				(*(current->data)).drawBounds();
+			}
+			glPopMatrix();
+
+			current = current->next;
 		}
-		glPopMatrix();
 
 		glColor3f(1.0, 1.0, 1.0);
 	}
 
-	//sky box
+	//Draw Sky Box
 	glPushMatrix();
 	{
 		GLUquadricObj * qobj;
@@ -303,6 +353,9 @@ void myDisplay(void)
 		gluDeleteQuadric(qobj);
 	}
 	glPopMatrix();
+
+	// Draw HUD Elements
+	drawCrosshairs();
 
 	glutSwapBuffers();
 }
@@ -365,15 +418,15 @@ void mySpecial(int key, int x, int y) {
 	glutPostRedisplay();
 }
 
+// This variable is hack to stop glutWarpPointer from triggering an event callback to Mouse(...)
+// This avoids it being called recursively and hanging up the event loop
+bool just_warped = false;
+
 //=======================================================================
 // Motion Functions
 //=======================================================================
 void myPassiveMotion(int x, int y)
 {
-	// This variable is hack to stop glutWarpPointer from triggering an event callback to Mouse(...)
-	// This avoids it being called recursively and hanging up the event loop
-	static bool just_warped = false;
-
 	if (just_warped) {
 		just_warped = false;
 		return;
@@ -473,23 +526,31 @@ void myInit(void)
 	camera.eye = Vector3f(20, 10, 20);
 	camera.up = Vector3f(0, 1, 0);
 
-	// Initialize Collidable Models
+	// Initialize Player Model
 	player.model = model_player;
-	skeleton.model = model_skeleton;
 
-	// Initialize Model Transformations
+	// Initialize Player Transformations
 	player.pos = Vector3f(8.0, 0.01, 5.0);
 	player.rot = Vector3f(0.0, 45.0, 0.0);
 	player.scale = 0.015;
-	skeleton.pos = Vector3f(5.0, 2.149, 8.0);
-	skeleton.rot = Vector3f(90.0, 45.0, 0);
-	skeleton.scale = 0.05;
 
-	// Initialize Model Bounds
+	// Initialize Player Bounds
 	player.bound_radius = 60;
 	player.bound_height = 90;
-	skeleton.bound_radius = 20;
-	skeleton.bound_height = 0;
+
+	Collidable* tree;
+	// Initialize Enemies
+	enemies = LinkedList();
+	for (int i = 0; i < 3; i++) {
+		Collidable* enemy = new Collidable();
+		enemy->model = model_skeleton;
+		enemy->pos = Vector3f(5.0, 2.149, 8.0 + i);
+		enemy->rot = Vector3f(90.0, 45.0, 0);
+		enemy->scale = 0.05;
+		enemy->bound_radius = 20;
+		enemy->bound_height = 0;
+		enemies.add(enemy);
+	}
 
 	// Initialize Flow Control Variables
 	showBounds = false;
@@ -547,6 +608,7 @@ void main(int argc, char** argv)
 	glutMouseFunc(myMouse);
 
 	glutSetCursor(GLUT_CURSOR_NONE);
+	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 
 	glutReshapeFunc(myReshape);
 

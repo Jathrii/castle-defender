@@ -30,9 +30,6 @@ void Collidable::drawBounds() {
 	glTranslatef(pos.x, pos.y, pos.z);
 	glScalef(scale, scale, scale);
 	glTranslatef(0, bound_height, 0.0);
-	glRotatef(rot.y, 0, 1, 0);
-	glRotatef(rot.x, 1, 0, 0);
-	glRotatef(rot.z, 0, 0, 1);
 	glutSolidSphere(bound_radius, 100, 100);
 }
 

@@ -32,8 +32,13 @@ void Camera::moveY(float d) {
 
 void Camera::moveZ(float d) {
 	Vector3f view = (center - eye).unit();
-	eye = eye + view * d;
-	center = center + view * d;
+	//eye = eye + view * d;
+	//center = center + view * d;
+
+	eye.x = eye.x + view.x * d;
+	eye.z = eye.z + view.z * d;
+	center.x = center.x + view.x * d;
+	center.z = center.z + view.z * d;
 }
 
 void Camera::rotateX(float a) {
