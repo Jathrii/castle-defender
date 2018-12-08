@@ -3,10 +3,12 @@
 #include "GLTexture.h"
 #include "Vector3f.h"
 #include "Camera.h"
+#include "Collidable.h"
 #include <glut.h>
 #include <cmath>
 
-#define GLUT_KEY_ESCAPE 27
+#define ESCAPE 27
+#define SPACEBAR 32
 
 int WIDTH = 1280;
 int HEIGHT = 720;
@@ -28,16 +30,15 @@ Model_3DS model_tree;
 Model_3DS model_player;
 Model_3DS model_skeleton;
 
-// Model Transformations
-Vector3f player_pos;
-float player_rot;
-
-// Model Bounds
-float player_bound_radius;
-float player_bound_height;
+// Collidable Variables
+Collidable player;
+Collidable skeleton;
 
 // Textures
 GLTexture tex_ground;
+
+// Flow Control Variables
+bool showBounds;
 
 //=======================================================================
 // Camera Setup Function
@@ -116,17 +117,21 @@ void RenderGround()
 	glBindTexture(GL_TEXTURE_2D, tex_ground.texture[0]);	// Bind the ground texture
 
 	glPushMatrix();
-	glBegin(GL_QUADS);
-	glNormal3f(0, 1, 0);	// Set quad normal direction.
-	glTexCoord2f(0, 0);		// Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
-	glVertex3f(-20, 0, -20);
-	glTexCoord2f(10, 0);
-	glVertex3f(20, 0, -20);
-	glTexCoord2f(10, 10);
-	glVertex3f(20, 0, 20);
-	glTexCoord2f(0, 10);
-	glVertex3f(-20, 0, 20);
-	glEnd();
+	{
+		glBegin(GL_QUADS);
+		{
+			glNormal3f(0, 1, 0);	// Set quad normal direction.
+			glTexCoord2f(0, 0);		// Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
+			glVertex3f(-20, 0, -20);
+			glTexCoord2f(10, 0);
+			glVertex3f(20, 0, -20);
+			glTexCoord2f(10, 10);
+			glVertex3f(20, 0, 20);
+			glTexCoord2f(0, 10);
+			glVertex3f(-20, 0, 20);
+		}
+		glEnd();
+	}
 	glPopMatrix();
 
 	glEnable(GL_LIGHTING);	// Enable lighting again for other entites coming throung the pipeline.
@@ -197,16 +202,6 @@ void axes(double length) {
 }
 
 //=======================================================================
-// Player Tranformation Function
-//=======================================================================
-void transformPlayer() {
-	//glTranslatef(8, 0.01, 5);
-	glTranslatef(player_pos.x, player_pos.y, player_pos.z);
-	glRotatef(player_rot, 0, 1, 0);
-	glScalef(0.015, 0.015, 0.015);
-}
-
-//=======================================================================
 // Display Function
 //=======================================================================
 void myDisplay(void)
@@ -215,10 +210,21 @@ void myDisplay(void)
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLfloat lightIntensity[] = { 0.7, 0.7, 0.7, 1.0f };
+	GLfloat lightIntensity[] = { 0.7f, 0.7f, 0.7f, 1.0f };
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+
+	bool collision = player & skeleton;
+
+	if (collision) {
+		glPushMatrix();
+		{
+			glTranslatef(0.0, 10.0, 0.0);
+			glutSolidSphere(2, 10, 10);
+		}
+		glPopMatrix();
+	}
 
 	// Draw Center Sphere
 	glutSolidSphere(0.5, 10, 10);
@@ -232,8 +238,8 @@ void myDisplay(void)
 	// Draw Tree Model
 	glPushMatrix();
 	{
-		glTranslatef(10, 0, 0);
-		glScalef(0.7, 0.7, 0.7);
+		glTranslatef(10.0f, 0.0f, 0.0f);
+		glScalef(0.7f, 0.7f, 0.7f);
 		model_tree.Draw();
 	}
 	glPopMatrix();
@@ -241,8 +247,8 @@ void myDisplay(void)
 	// Draw House Model
 	glPushMatrix();
 	{
-		glTranslated(0, 0.1, 0);
-		glRotatef(90.f, 1, 0, 0);
+		glTranslatef(0.0, 0.1, 0.0);
+		glRotatef(90.0f, 1.0, 0.0, 0.0);
 		model_house.Draw();
 	}
 	glPopMatrix();
@@ -250,34 +256,38 @@ void myDisplay(void)
 	// Draw Player Model
 	glPushMatrix();
 	{
-		transformPlayer();
-		model_player.Draw();
+		player.draw();
 	}
 	glPopMatrix();
-
-	// Draw Player Bounding Sphere
-	glColor4f(0.5, 0, 0, 0.5);
-
-	glPushMatrix();
-	{
-		transformPlayer();
-		glTranslatef(0, player_bound_height, 0);
-		glutSolidSphere(player_bound_radius, player_bound_radius, player_bound_radius);
-	}
-	glPopMatrix();
-
-	glColor3f(1, 1, 1);
 
 	// Draw Skeleton Model
 	glPushMatrix();
 	{
-		glTranslatef(5, 2.149, 8);
-		glRotated(45, 0, 1, 0);
-		glRotated(90, 1, 0, 0);
-		glScalef(0.05, 0.05, 0.05);
-		model_skeleton.Draw();
+		skeleton.draw();
 	}
 	glPopMatrix();
+
+	if (showBounds) {
+		// Draw Player Bounding Sphere
+		glColor4f(0.5, 0.0, 0.0, 0.5);
+
+		glPushMatrix();
+		{
+			player.drawBounds();
+		}
+		glPopMatrix();
+
+		// Draw Skeleton Bounding Sphere
+		glColor4f(0.0, 0.0, 0.5, 0.5);
+
+		glPushMatrix();
+		{
+			skeleton.drawBounds();
+		}
+		glPopMatrix();
+
+		glColor3f(1.0, 1.0, 1.0);
+	}
 
 	//sky box
 	glPushMatrix();
@@ -322,8 +332,10 @@ void myKeyboard(unsigned char key, int x, int y) {
 	case 'e':
 		camera.moveY(d);
 		break;
-
-	case GLUT_KEY_ESCAPE:
+	case SPACEBAR:
+		showBounds = !showBounds;
+		break;
+	case ESCAPE:
 		exit(EXIT_SUCCESS);
 	}
 
@@ -334,20 +346,19 @@ void myKeyboard(unsigned char key, int x, int y) {
 // Special Key Function
 //=======================================================================
 void mySpecial(int key, int x, int y) {
-	float a = 1.0;
 
 	switch (key) {
 	case GLUT_KEY_UP:
-		camera.rotateX(a);
+		player.pos.z = player.pos.z - 0.1f;
 		break;
 	case GLUT_KEY_DOWN:
-		camera.rotateX(-a);
+		player.pos.z = player.pos.z + 0.1f;
 		break;
 	case GLUT_KEY_LEFT:
-		camera.rotateY(a);
+		player.pos.x = player.pos.x - 0.1f;
 		break;
 	case GLUT_KEY_RIGHT:
-		camera.rotateY(-a);
+		player.pos.x = player.pos.x + 0.1f;
 		break;
 	}
 
@@ -393,8 +404,6 @@ void myMotion(int x, int y)
 void myMouse(int button, int state, int x, int y)
 {
 	y = HEIGHT - y;
-
-	int d = 0.1;
 
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_DOWN)
 		;
@@ -462,15 +471,28 @@ void myInit(void)
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 	camera.center = Vector3f(0, 0, 0);
 	camera.eye = Vector3f(20, 10, 20);
-	//camera.up = Vector3f(0, 1, 0);
+	camera.up = Vector3f(0, 1, 0);
+
+	// Initialize Collidable Models
+	player.model = model_player;
+	skeleton.model = model_skeleton;
 
 	// Initialize Model Transformations
-	player_pos = Vector3f(8.0, 0.01, 5.0);
-	player_rot = 45;
+	player.pos = Vector3f(8.0, 0.01, 5.0);
+	player.rot = Vector3f(0.0, 45.0, 0.0);
+	player.scale = 0.015;
+	skeleton.pos = Vector3f(5.0, 2.149, 8.0);
+	skeleton.rot = Vector3f(90.0, 45.0, 0);
+	skeleton.scale = 0.05;
 
 	// Initialize Model Bounds
-	player_bound_radius = 60;
-	player_bound_height = 90;
+	player.bound_radius = 60;
+	player.bound_height = 90;
+	skeleton.bound_radius = 20;
+	skeleton.bound_height = 0;
+
+	// Initialize Flow Control Variables
+	showBounds = false;
 
 	initLightSource();
 
@@ -516,6 +538,8 @@ void main(int argc, char** argv)
 
 	glutKeyboardFunc(myKeyboard);
 
+	glutSpecialFunc(mySpecial);
+
 	glutMotionFunc(myMotion);
 
 	glutPassiveMotionFunc(myPassiveMotion);
@@ -526,9 +550,10 @@ void main(int argc, char** argv)
 
 	glutReshapeFunc(myReshape);
 
+	LoadAssets();
+
 	myInit();
 
-	LoadAssets();
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_LIGHTING);
 	glEnable(GL_LIGHT0);
