@@ -1,17 +1,20 @@
 #include "TextureBuilder.h"
 #include "Model_3DS.h"
 #include "GLTexture.h"
+#include "Vector3f.h"
+#include "Camera.h"
 #include <glut.h>
 #include <cmath>
 
 #define GLUT_KEY_ESCAPE 27
-#define DEG2RAD(a) (a * 0.0174532925)
 
 int WIDTH = 1280;
 int HEIGHT = 720;
 
 GLuint tex;
-char title[] = "3D Model Loader Sample";
+
+// Camera Instance
+Camera camera;
 
 // 3D Projection Options
 GLdouble fovy = 45.0;
@@ -19,94 +22,22 @@ GLdouble aspectRatio = (GLdouble)WIDTH / (GLdouble)HEIGHT;
 GLdouble zNear = 0.05;
 GLdouble zFar = 500;
 
-class Vector3f {
-public:
-	float x, y, z;
+// Model Variables
+Model_3DS model_house;
+Model_3DS model_tree;
+Model_3DS model_player;
+Model_3DS model_skeleton;
 
-	Vector3f(float _x = 0.0f, float _y = 0.0f, float _z = 0.0f) {
-		x = _x;
-		y = _y;
-		z = _z;
-	}
+// Model Transformations
+Vector3f player_pos;
+float player_rot;
 
-	Vector3f operator+(Vector3f &v) {
-		return Vector3f(x + v.x, y + v.y, z + v.z);
-	}
+// Model Bounds
+float player_bound_radius;
+float player_bound_height;
 
-	Vector3f operator-(Vector3f &v) {
-		return Vector3f(x - v.x, y - v.y, z - v.z);
-	}
-
-	Vector3f operator*(float n) {
-		return Vector3f(x * n, y * n, z * n);
-	}
-
-	Vector3f operator/(float n) {
-		return Vector3f(x / n, y / n, z / n);
-	}
-
-	Vector3f unit() {
-		return *this / sqrt(x * x + y * y + z * z);
-	}
-
-	Vector3f cross(Vector3f v) {
-		return Vector3f(y * v.z - z * v.y, z * v.x - x * v.z, x * v.y - y * v.x);
-	}
-};
-
-class Camera {
-public:
-	Vector3f eye, center, up;
-
-	Camera(float eyeX = 1.0f, float eyeY = 1.0f, float eyeZ = 1.0f, float centerX = 0.0f, float centerY = 0.0f, float centerZ = 0.0f, float upX = 0.0f, float upY = 1.0f, float upZ = 0.0f) {
-		eye = Vector3f(eyeX, eyeY, eyeZ);
-		center = Vector3f(centerX, centerY, centerZ);
-		up = Vector3f(upX, upY, upZ);
-	}
-
-	void moveX(float d) {
-		Vector3f right = up.cross(center - eye).unit();
-		eye = eye + right * d;
-		center = center + right * d;
-	}
-
-	void moveY(float d) {
-		eye = eye + up.unit() * d;
-		center = center + up.unit() * d;
-	}
-
-	void moveZ(float d) {
-		Vector3f view = (center - eye).unit();
-		eye = eye + view * d;
-		center = center + view * d;
-	}
-
-	void rotateX(float a) {
-		Vector3f view = (center - eye).unit();
-		Vector3f right = up.cross(view).unit();
-		view = view * cos(DEG2RAD(a)) + up * sin(DEG2RAD(a));
-		//up = view.cross(right);
-		center = eye + view;
-	}
-
-	void rotateY(float a) {
-		Vector3f view = (center - eye).unit();
-		Vector3f right = up.cross(view).unit();
-		view = view * cos(DEG2RAD(a)) + right * sin(DEG2RAD(a));
-		right = view.cross(up);
-		center = eye + view;
-	}
-
-	void look() {
-		gluLookAt(
-			eye.x, eye.y, eye.z,
-			center.x, center.y, center.z,
-			up.x, up.y, up.z
-			);
-	}
-};
-
-Camera camera;
+// Textures
+GLTexture tex_ground;
 
 //=======================================================================
 // Camera Setup Function
@@ -120,15 +51,6 @@ void setupCamera() {
 	glLoadIdentity();
 	camera.look();
 }
-
-// Model Variables
-Model_3DS model_house;
-Model_3DS model_tree;
-Model_3DS model_player;
-Model_3DS model_skeleton;
-
-// Textures
-GLTexture tex_ground;
 
 //=======================================================================
 // Lighting Configuration Function
@@ -275,6 +197,16 @@ void axes(double length) {
 }
 
 //=======================================================================
+// Player Tranformation Function
+//=======================================================================
+void transformPlayer() {
+	//glTranslatef(8, 0.01, 5);
+	glTranslatef(player_pos.x, player_pos.y, player_pos.z);
+	glRotatef(player_rot, 0, 1, 0);
+	glScalef(0.015, 0.015, 0.015);
+}
+
+//=======================================================================
 // Display Function
 //=======================================================================
 void myDisplay(void)
@@ -318,12 +250,23 @@ void myDisplay(void)
 	// Draw Player Model
 	glPushMatrix();
 	{
-		glTranslatef(8, 0.01, 5);
-		glRotated(45, 0, 1, 0);
-		glScalef(0.015, 0.015, 0.015);
+		transformPlayer();
 		model_player.Draw();
 	}
 	glPopMatrix();
+
+	// Draw Player Bounding Sphere
+	glColor4f(0.5, 0, 0, 0.5);
+
+	glPushMatrix();
+	{
+		transformPlayer();
+		glTranslatef(0, player_bound_height, 0);
+		glutSolidSphere(player_bound_radius, player_bound_radius, player_bound_radius);
+	}
+	glPopMatrix();
+
+	glColor3f(1, 1, 1);
 
 	// Draw Skeleton Model
 	glPushMatrix();
@@ -515,9 +458,19 @@ void myInit(void)
 	// zNear and zFar:	Specify the front and back clipping planes distances from camera.		 //
 	//*******************************************************************************************//
 
+	// Initialize Camera & Cursor Positions
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 	camera.center = Vector3f(0, 0, 0);
 	camera.eye = Vector3f(20, 10, 20);
+	//camera.up = Vector3f(0, 1, 0);
+
+	// Initialize Model Transformations
+	player_pos = Vector3f(8.0, 0.01, 5.0);
+	player_rot = 45;
+
+	// Initialize Model Bounds
+	player_bound_radius = 60;
+	player_bound_height = 90;
 
 	initLightSource();
 
@@ -557,7 +510,7 @@ void main(int argc, char** argv)
 
 	glutInitWindowPosition((glutGet(GLUT_SCREEN_WIDTH) - WIDTH) / 2, (glutGet(GLUT_SCREEN_HEIGHT) - HEIGHT) / 2);
 
-	glutCreateWindow(title);
+	glutCreateWindow("The Gayme");
 
 	glutDisplayFunc(myDisplay);
 
@@ -581,6 +534,9 @@ void main(int argc, char** argv)
 	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glShadeModel(GL_SMOOTH);
 
