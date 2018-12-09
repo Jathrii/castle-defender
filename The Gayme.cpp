@@ -11,6 +11,8 @@
 
 #define ESCAPE 27
 #define SPACEBAR 32
+#define DEG2RAD(a) (a * 0.0174532925)
+
 
 int WIDTH = 1280;
 int HEIGHT = 720;
@@ -41,6 +43,12 @@ GLTexture tex_ground;
 
 // Flow Control Variables
 bool showBounds;
+
+// Third-person check
+bool thirdPerson;
+
+// Free camera movement
+bool freecam;
 
 //=======================================================================
 // Camera Setup Function
@@ -294,11 +302,13 @@ void myDisplay(void) {
 	glPopMatrix();
 
 	// Draw Player Model
-	glPushMatrix();
-	{
-		player.draw();
+	if (thirdPerson) {
+		glPushMatrix();
+		{
+			player.draw();
+		}
+		glPopMatrix();
 	}
-	glPopMatrix();
 
 	// Draw Enemy Models
 	current = enemies.head;
@@ -385,11 +395,40 @@ void myKeyboard(unsigned char key, int x, int y) {
 	case 'e':
 		camera.moveY(d);
 		break;
+	case '\\':
+		thirdPerson = !thirdPerson;
+		break;
 	case SPACEBAR:
 		showBounds = !showBounds;
 		break;
 	case ESCAPE:
 		exit(EXIT_SUCCESS);
+	}
+
+	if (!thirdPerson && !freecam) {
+		player.pos = camera.eye;
+		player.pos.y -= 2.5;
+	}
+	else if (thirdPerson && !freecam) {
+		player.pos = camera.eye;
+		Vector3f view = (camera.center - camera.eye).unit();
+		view = view * cos(DEG2RAD(0)) + camera.up * sin(DEG2RAD(0));
+		player.pos = player.pos + view * 10;
+		player.pos.y = camera.eye.y - 5;
+
+		//if (camera.eye.x < camera.center.x) {
+		//	player.pos.x += 1;
+		//}
+		//if (camera.eye.x > camera.center.x) {
+		//	player.pos.x -= 1;
+		//}
+		//if (camera.eye.y < camera.center.y) {
+		//	player.pos.y += 1;
+		//}
+		//if (camera.eye.y > camera.center.y) {
+		//	player.pos.y -= 1;
+		//}
+
 	}
 
 	glutPostRedisplay();
