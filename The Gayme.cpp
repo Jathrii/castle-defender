@@ -284,20 +284,13 @@ void myDisplay(void) {
 
 	// Draw Axes
 	axes(30);
-
+	
 	// Draw Camera Eye & Center
+	/*
 	glColor3f(0.0f, 0.0f, 1.0f);
 	glPushMatrix();
 	{
 		glTranslatef(camera.center.x, camera.center.y, camera.center.z);
-		glutSolidSphere(0.3, 10, 10);
-	}
-	glPopMatrix();
-
-	glColor3f(0.0f, 1.0f, 0.0f);
-	glPushMatrix();
-	{
-		glTranslatef(player.pos.x, player.pos.y + player.bound_height * player.scale * 1.5 + 1, player.pos.z);
 		glutSolidSphere(0.3, 10, 10);
 	}
 	glPopMatrix();
@@ -311,16 +304,7 @@ void myDisplay(void) {
 	glPopMatrix();
 
 	glColor3f(1.0f, 1.0f, 1.0f);
-	glPushMatrix();
-	{
-		glBegin(GL_LINE);
-		{
-			glVertex3f(camera.center.x, camera.center.y, camera.center.z);
-			glVertex3f(camera.center.x, camera.center.y, camera.center.z);
-		}
-		glEnd();
-	}
-	glPopMatrix();
+	*/
 
 	// Draw Ground
 	RenderGround();
