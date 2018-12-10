@@ -326,7 +326,7 @@ void myDisplay(void) {
 
 			Collidable* c = new Collidable();
 			c->model = model_coin;
-			c->pos = Vector3f(0, 0.7, i);
+			c->pos = Vector3f(-18, 0.7, -10);
 			c->rot = Vector3f(90.0, 0, 0);
 			c->scale =0.5;
 			c->bound_radius = 1;
@@ -346,7 +346,8 @@ void myDisplay(void) {
 			cout << collision << " " << "Castle was hit " << endl;
 			CastleHealth += 10;
 			if (CastleHealth >= 1270){
-				GameOver = "Game Over and Goodbye";
+				CastleHealth = 1270; // Don't Make the bar show 
+				GameOver = "Game Over and Goodbye"; // Print Goodbye
 			}
 
 		}
