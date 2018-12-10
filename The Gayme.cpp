@@ -316,7 +316,9 @@ void myDisplay(void) {
 
 	bool collision = false;
 	Node* current = enemies.head;
-	/*while (current->next) {
+	cout << current << " " << "Head of Enemy " << endl;
+
+	while (current->next) {
 		collision |= (Castle & *((current)->data));
 		if (collision) {
 			current->next = (current->next)->next;
@@ -327,7 +329,7 @@ void myDisplay(void) {
 		//cout << enemies.length << " " << "length After Removing " << endl;
 
 		current = current->next;
-	}*/
+	}
 
 	/*if (collision) {
 		glPushMatrix();
