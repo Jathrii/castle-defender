@@ -9,6 +9,8 @@
 #include <glut.h>
 #include <cmath>
 #include <iostream>
+#include <ctime>
+#include <time.h>
 using namespace std;
 
 #define ESCAPE 27
@@ -16,6 +18,8 @@ using namespace std;
 
 int WIDTH = 1280;
 int HEIGHT = 720;
+int X;
+int Z;
 int PlayerScore = 0;
 float CastleHealth=1000;
 float RandomEnemyX;
@@ -312,7 +316,7 @@ void myDisplay(void) {
 
 			Collidable* enemy = new Collidable();
 			enemy->model = model_skeleton;
-			enemy->pos = Vector3f(-2, 2.149, -15 + i);
+			enemy->pos = Vector3f(-2, 2.149,  i);
 			enemy->rot = Vector3f(90.0, 180.0, 0);
 			enemy->scale = 0.05;
 			enemy->bound_radius = 20;
@@ -320,19 +324,22 @@ void myDisplay(void) {
 			enemies.add(enemy);
 		}
 	}
-	if (Collectibles.length == 0){
-		for (int i = 0; i < 10; i++){ // When collectibls are Empty Spawn new Collectible
-			Collidable* coin = new Collidable();
+	// Add New collectibles 
+	if (Collectibles.length <10){
+
+
 
 			Collidable* c = new Collidable();
 			c->model = model_coin;
-			c->pos = Vector3f(-18, 0.7, -10);
+			c->pos = Vector3f(X , 0.7, Z);
 			c->rot = Vector3f(90.0, 0, 0);
 			c->scale =0.5;
 			c->bound_radius = 1;
 			c->bound_height = 0;
 			Collectibles.add(c);
-		}
+
+
+		
 		}
 	
 
@@ -343,7 +350,7 @@ void myDisplay(void) {
 		collision |= (Castle & *((current)->data));
 		if (collision) {
 			//current->next = (current->next)->next;
-			cout << collision << " " << "Castle was hit " << endl;
+			//cout << collision << " " << "Castle was hit " << endl;
 			CastleHealth += 10;
 			if (CastleHealth >= 1270){
 				CastleHealth = 1270; // Don't Make the bar show 
@@ -372,7 +379,7 @@ void myDisplay(void) {
 				previous->next = current->next;
 			}
 			
-			cout << collision << " " << "Some Collectible was collected" << endl;
+			//cout << collision << " " << "Some Collectible was collected" << endl;
 			CastleHealth -= 10;
 
 		}
@@ -381,15 +388,7 @@ void myDisplay(void) {
 		current = current->next;
 	}
 
-	/*if (collision) {
-		glPushMatrix();
-		{
-			glTranslatef(0.0, 10.0, 0.0);
-			glutSolidSphere(2, 10, 10);
-			cout << collision << " " << "Player hit something " << endl;
-		}
-		glPopMatrix();
-	}*/
+
 
 	// Draw Center Sphere
 	glutSolidSphere(0.5, 10, 10);
@@ -551,7 +550,8 @@ void myDisplay(void) {
 //=======================================================================
 void ShootEnemy(int extravar) {
 
-	glutPostRedisplay();
+
+	//glutPostRedisplay();
 
 	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
 
@@ -582,7 +582,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		camera.moveY(d);
 		break;
 	case 'h':
-		cout << PlayerScore << " " << "Player is Hitting " << endl;
+		//cout << PlayerScore << " " << "Player is Hitting " << endl;
 		ShootEnemy(1);
 
 		break;
@@ -594,7 +594,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		exit(EXIT_SUCCESS);
 	}
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 //=======================================================================
@@ -617,7 +617,7 @@ void mySpecial(int key, int x, int y) {
 		break;
 	}
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 // This variable is hack to stop glutWarpPointer from triggering an event callback to Mouse(...)
@@ -645,7 +645,7 @@ void myPassiveMotion(int x, int y)
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 	just_warped = true;
 
-	glutPostRedisplay();	//Re-draw scene 
+	//glutPostRedisplay();	//Re-draw scene 
 }
 
 void myMotion(int x, int y)
@@ -786,6 +786,12 @@ void LoadAssets()
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 }
+void Redisplay(){
+	srand((unsigned)time(0));
+	Z = -18+(std::rand() % (36));
+	X= (std::rand() % (30)) + -10;
+	glutPostRedisplay();
+}
 //=======================================================================
 // Main Function
 //=======================================================================
@@ -814,6 +820,7 @@ void main(int argc, char** argv)
 	glutMouseFunc(myMouse);
 
 	glutSetCursor(GLUT_CURSOR_NONE);
+	glutIdleFunc(Redisplay);
 	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 
 	glutReshapeFunc(myReshape);
