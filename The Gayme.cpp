@@ -38,6 +38,7 @@ Model_3DS model_player;
 Model_3DS model_skeleton;
 Model_3DS model_coin;
 Model_3DS model_stone;
+Model_3DS model_knight;
 
 // Collidable Variables
 Collidable player;
@@ -337,6 +338,15 @@ void myDisplay(void) {
 		//glScalef(2.8f, 2.8f, 2.8f);
 		
 		model_stone.Draw();
+	}
+	glPopMatrix();
+	//draw knight
+	glPushMatrix();
+	{
+		glTranslatef(6.0f, 0.0f, 0.0f);
+		//glScalef(2.8f, 2.8f, 2.8f);
+
+		model_knight.Draw();
 	}
 	glPopMatrix();
 	// Draw House Model
@@ -735,6 +745,7 @@ void LoadAssets()
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
 	model_coin.Load("Models/coin/coin.3ds");
 	model_stone.Load("models/rock/rock.3DS");
+	model_knight.Load("models\chevalier\chevalier.3DS");
 
 
 	// Loading texture files
