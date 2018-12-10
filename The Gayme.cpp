@@ -17,11 +17,12 @@ using namespace std;
 int WIDTH = 1280;
 int HEIGHT = 720;
 int PlayerScore = 0;
-float CastleHealth=1270;
+float CastleHealth=1000;
 float RandomEnemyX;
 float RandomEnemyY;
 int CurrentEnemyNumber = 1;
 int EnemySize = 0;
+char* GameOver = "";
 
 GLuint tex;
 
@@ -39,11 +40,14 @@ Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_player;
 Model_3DS model_skeleton;
+Model_3DS model_coin;
+Model_3DS model_stone;
 
 // Collidable Variables
 Collidable player;
 Collidable Castle;
 LinkedList enemies = LinkedList();;
+LinkedList Collectibles = LinkedList();
 
 // Textures
 GLTexture tex_ground;
@@ -219,10 +223,10 @@ void UpdateCastleHealth(){
 	glPushMatrix();
 	glBegin(GL_QUADS);
 	glColor3f(0.0f, 1.0f, 0.0f);
-	glVertex3f(1000, 10, 0);
 	glVertex3f(CastleHealth, 10, 0);
+	glVertex3f(1270, 10, 0);
+	glVertex3f(1270, 35, 0);
 	glVertex3f(CastleHealth, 35, 0);
-	glVertex3f(1000, 35, 0);
 	glEnd();
 	glPopMatrix();
 
@@ -279,6 +283,8 @@ void drawCrosshairs() {
 	char* p0s[20];
 	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
 	print(10, 30, (char *)p0s);
+
+	print(500, 30, GameOver);
 	UpdateCastleHealth();
 
 	glPopMatrix();
@@ -297,8 +303,9 @@ void myDisplay(void) {
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+
+
 	if (enemies.length == 0){
-		//cout << enemies.length << " " << "Enemy List is now Empty " << endl;
 
 
 		for (int i = 0; i < 3; i++) {
@@ -313,21 +320,63 @@ void myDisplay(void) {
 			enemies.add(enemy);
 		}
 	}
+	if (Collectibles.length == 0){
+		for (int i = 0; i < 10; i++){ // When collectibls are Empty Spawn new Collectible
+			Collidable* coin = new Collidable();
+
+			Collidable* c = new Collidable();
+			c->model = model_coin;
+			c->pos = Vector3f(0, 0.7, i);
+			c->rot = Vector3f(90.0, 0, 0);
+			c->scale =0.5;
+			c->bound_radius = 1;
+			c->bound_height = 0;
+			Collectibles.add(c);
+		}
+		}
+	
 
 	bool collision = false;
 	Node* current = enemies.head;
-	cout << current << " " << "Head of Enemy " << endl;
 
-	while (current->next) {
+	while (current) {
 		collision |= (Castle & *((current)->data));
 		if (collision) {
-			current->next = (current->next)->next;
+			//current->next = (current->next)->next;
 			cout << collision << " " << "Castle was hit " << endl;
+			CastleHealth += 10;
+			if (CastleHealth >= 1270){
+				GameOver = "Game Over and Goodbye";
+			}
 
 		}
 		collision = false;
-		//cout << enemies.length << " " << "length After Removing " << endl;
 
+		current = current->next;
+	}
+	bool HitCollectible = false;
+
+	// Check if a Collectible was collected
+	 current = Collectibles.head;
+	 Node* previous;
+
+	while (current) {
+		collision |= (player & *((current)->data));
+		if (collision) {
+			if (current == Collectibles.head)
+			{
+				Collectibles =  LinkedList();
+			}
+			else{
+				previous->next = current->next;
+			}
+			
+			cout << collision << " " << "Some Collectible was collected" << endl;
+			CastleHealth -= 10;
+
+		}
+		HitCollectible = false;
+		previous = current;
 		current = current->next;
 	}
 
@@ -359,7 +408,30 @@ void myDisplay(void) {
 	}
 	glPopMatrix();
 
+	//draw coin/collectiable model
+	glPushMatrix();
+	{
+		glTranslatef(18.0f, 6.0f, 3.0f);
+		glScalef(0.8f, 0.8f, 0.8f);
+		//glColor3f(0.8f,0.7f,0.4f);
+		glRotatef(90, 10, 0, 0);
+		//model_coin.Draw();
+	}
+	glPopMatrix();
+	//draw stone
+	/*glPushMatrix();
+	{
+		glTranslatef(0.0f, 6.0f, 0.0f);
+		//glScalef(2.8f, 2.8f, 2.8f);
+
+		model_stone.Draw();
+	}
+	glPopMatrix();*/
+
+
 	// Draw House Model
+
+
 	glPushMatrix();
 	{
 
@@ -379,6 +451,18 @@ void myDisplay(void) {
 	// Draw Enemy Models
 	current = enemies.head;
 	while (current) {
+		glPushMatrix();
+		{
+			(*(current->data)).draw();
+		}
+		glPopMatrix();
+
+		current = current->next;
+	}
+	//draw Collectibles
+	current = Collectibles.head;
+	while (current) {
+
 		glPushMatrix();
 		{
 			(*(current->data)).draw();
@@ -424,6 +508,20 @@ void myDisplay(void) {
 			current = current->next;
 		}
 
+		// Draw Collectibles
+		glColor4f(0.0, 0.0, 0.5, 0.5);
+
+		current = Collectibles.head;
+		while (current) {
+			glPushMatrix();
+			{
+				(*(current->data)).drawBounds();
+			}
+			glPopMatrix();
+
+			current = current->next;
+		}
+
 		glColor3f(1.0, 1.0, 1.0);
 	}
 
@@ -453,7 +551,6 @@ void myDisplay(void) {
 void ShootEnemy(int extravar) {
 
 	glutPostRedisplay();
-
 
 	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
 
@@ -640,7 +737,7 @@ void myInit(void)
 
 	// Initialize Player Bounds
 	player.bound_radius = 60;
-	player.bound_height = 90;
+	player.bound_height = 80;
 
 	//Initialize Castle bounds
 
@@ -650,6 +747,7 @@ void myInit(void)
 	Castle.scale = 1;
 	Castle.pos = Vector3f(0, 0.1, -18);
 	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+
 
 	
 
@@ -679,12 +777,14 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_player.Load("Models/player/player.3ds");
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
+	model_coin.Load("Models/coin/coin.3ds");
+	model_stone.Load("models/rock/rock.3DS");
+
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 }
-
 //=======================================================================
 // Main Function
 //=======================================================================
