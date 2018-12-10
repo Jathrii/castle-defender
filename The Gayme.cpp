@@ -308,7 +308,7 @@ void myDisplay(void) {
 
 		}
 		collision = false;
-		cout << enemies.length << " " << "length After Removing " << endl;
+		//cout << enemies.length << " " << "length After Removing " << endl;
 
 		current = current->next;
 	}
@@ -429,7 +429,17 @@ void myDisplay(void) {
 
 	glutSwapBuffers();
 }
+//=======================================================================
+// Timer Functions
+//=======================================================================
+void ShootEnemy(int extravar) {
 
+	glutPostRedisplay();
+
+
+	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
+
+}
 //=======================================================================
 // Keyboard Function
 //=======================================================================
@@ -455,6 +465,12 @@ void myKeyboard(unsigned char key, int x, int y) {
 	case 'e':
 		camera.moveY(d);
 		break;
+	case 'h':
+		cout << PlayerScore << " " << "Player is Hitting " << endl;
+		ShootEnemy(1);
+
+		break;
+
 	case SPACEBAR:
 		showBounds = !showBounds;
 		break;
@@ -622,7 +638,7 @@ void myInit(void)
 	Collidable* tree;
 	// Spawn at firsr or when we emptied the list {
 	if (enemies.length == 0){
-		cout << enemies.length << " " << "Enemy List is now Empty " << endl;
+		//cout << enemies.length << " " << "Enemy List is now Empty " << endl;
 
 		
 		for (int i = 0; i < 3; i++) {
