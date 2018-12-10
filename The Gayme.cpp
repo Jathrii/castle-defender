@@ -9,6 +9,7 @@
 #include <glut.h>
 #include <cmath>
 #include <iostream>
+#include <ctime>
 
 using namespace std;
 
@@ -55,6 +56,12 @@ Vector3f firstPersonCenter;
 Vector3f thirdPersonEye;
 Vector3f thirdPersonCenter;
 
+
+GLfloat lightPosition2[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+
+
+
+
 //=======================================================================
 // Camera Setup Function
 //=======================================================================
@@ -78,23 +85,57 @@ void initLightSource()
 
 	// Enable Light Source number 0
 	// OpengL has 8 light sources
+	// Skylight
 	glEnable(GL_LIGHT0);
 
 	// Define Light source 0 ambient light
-	GLfloat ambient[] = { 0.1f, 0.1f, 0.1, 1.0f };
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	GLfloat ambient0[] = { 0.02f, 0.02f, 0.02f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
 
 	// Define Light source 0 diffuse light
-	GLfloat diffuse[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+	GLfloat diffuse0[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse0);
 
 	// Define Light source 0 Specular light
-	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	GLfloat specular0[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular0);
 
 	// Finally, define light source 0 position in World Space
-	GLfloat light_position[] = { 0.0f, 10.0f, 0.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	GLfloat lightPosition0[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
+
+
+	// Repeat for light 1: Lantern
+	glEnable(GL_LIGHT1);
+
+	GLfloat ambient1[] = { 0.0878f, 0.0616f, 0.0216f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient1);
+
+	GLfloat diffuse1[] = { 0.878f, 0.616f, 0.216f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse1);
+
+	GLfloat specular1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular1);
+
+	GLfloat lightPosition1[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
+
+	// Light2 variables
+
+	GLfloat ambient2[] = { 0.0878f, 0.0616f, 0.0216f, 1.0f };
+	GLfloat diffuse2[] = { 0.878f, 0.616f, 0.216f, 1.0f };
+	GLfloat specular2[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Repeat for light 2: Disco ball
+	//glEnable(GL_LIGHT2);
+
+	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
+
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
+
+	glLightfv(GL_LIGHT2, GL_SPECULAR, specular2);
+
+	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition2);
 }
 
 //=======================================================================
@@ -250,18 +291,43 @@ void drawCrosshairs() {
 	glPopMatrix();
 }
 
+void randomizeLight2() {
+	GLfloat ambient2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	GLfloat diffuse2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	GLfloat specular2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
+
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
+
+	glLightfv(GL_LIGHT2, GL_SPECULAR, specular2);
+
+}
+
 //=======================================================================
 // Display Function
 //=======================================================================
 void myDisplay(void) {
+	randomizeLight2();
 	setupCamera();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLfloat lightIntensity[] = { 0.7f, 0.7f, 0.7f, 1.0f };
-	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+	//GLfloat lightIntensity0[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat lightPosition0[] = { 0.0f, 100.0f, 0.0f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
+	//glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity0);
+
+	GLfloat lightPosition1[] = { player.pos.x, player.pos.y, player.pos.z, 1.0f };
+
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
+
+
+	glPushMatrix(); {
+		glTranslatef(lightPosition2[0], lightPosition2[1], lightPosition2[2]);
+		glutSolidSphere(0.1,15,15);
+		glPopMatrix();
+	}
+
 
 	bool collision = false;
 	Node* current = enemies.head;
@@ -392,6 +458,8 @@ void myDisplay(void) {
 	drawCrosshairs();
 
 	glutSwapBuffers();
+
+	glutPostRedisplay();
 }
 
 //=======================================================================
@@ -723,6 +791,7 @@ void LoadAssets()
 //=======================================================================
 void main(int argc, char** argv)
 {
+	srand(time(NULL));
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -755,8 +824,6 @@ void main(int argc, char** argv)
 	myInit();
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
 
