@@ -193,3 +193,5 @@ ModelManifest.xml
 
 # MAC Desktop Services Store
 .DS_Store
+
+.vscode
