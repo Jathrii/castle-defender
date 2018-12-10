@@ -297,10 +297,26 @@ void myDisplay(void) {
 	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
 	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+	if (enemies.length == 0){
+		//cout << enemies.length << " " << "Enemy List is now Empty " << endl;
+
+
+		for (int i = 0; i < 3; i++) {
+
+			Collidable* enemy = new Collidable();
+			enemy->model = model_skeleton;
+			enemy->pos = Vector3f(-2, 2.149, -15 + i);
+			enemy->rot = Vector3f(90.0, 180.0, 0);
+			enemy->scale = 0.05;
+			enemy->bound_radius = 20;
+			enemy->bound_height = 0;
+			enemies.add(enemy);
+		}
+	}
 
 	bool collision = false;
 	Node* current = enemies.head;
-	while (current->next) {
+	/*while (current->next) {
 		collision |= (Castle & *((current)->data));
 		if (collision) {
 			current->next = (current->next)->next;
@@ -311,7 +327,7 @@ void myDisplay(void) {
 		//cout << enemies.length << " " << "length After Removing " << endl;
 
 		current = current->next;
-	}
+	}*/
 
 	/*if (collision) {
 		glPushMatrix();
@@ -636,23 +652,8 @@ void myInit(void)
 	
 
 	Collidable* tree;
-	// Spawn at firsr or when we emptied the list {
-	if (enemies.length == 0){
-		//cout << enemies.length << " " << "Enemy List is now Empty " << endl;
+	// Spawn at first
 
-		
-		for (int i = 0; i < 3; i++) {
-
-			Collidable* enemy = new Collidable();
-			enemy->model = model_skeleton;
-			enemy->pos = Vector3f(-2, 2.149, -15 + i);
-			enemy->rot = Vector3f(90.0, 180.0, 0);
-			enemy->scale = 0.05;
-			enemy->bound_radius = 20;
-			enemy->bound_height = 0;
-			enemies.add(enemy);
-		}
-}
 
 	// Initialize Flow Control Variables
 	showBounds = false;
