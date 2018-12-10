@@ -36,6 +36,8 @@ Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_player;
 Model_3DS model_skeleton;
+Model_3DS model_coin;
+Model_3DS model_stone;
 
 // Collidable Variables
 Collidable player;
@@ -312,18 +314,37 @@ void myDisplay(void) {
 	// Draw Tree Model
 	glPushMatrix();
 	{
-		glTranslatef(10.0f, 0.0f, 0.0f);
-		glScalef(0.7f, 0.7f, 0.7f);
-		model_tree.Draw();
+		glTranslatef(0.0f, 6.0f, 0.0f);
+		//glScalef(9.7f, 9.7f, 9.7f);
+		//model_tree.Draw();
+		//model_coin.Draw();
 	}
 	glPopMatrix();
-
-	// Draw House Model
+	//draw coin/collectiable model
 	glPushMatrix();
+	{
+		glTranslatef(18.0f, 6.0f, 3.0f);
+		glScalef(0.8f, 0.8f, 0.8f);
+		//glColor3f(0.8f,0.7f,0.4f);
+		glRotatef(90, 10,0, 0);
+		model_coin.Draw();
+	}
+	glPopMatrix();
+	//draw stone
+	glPushMatrix();
+	{
+		glTranslatef(0.0f, 6.0f, 0.0f);
+		//glScalef(2.8f, 2.8f, 2.8f);
+		
+		model_stone.Draw();
+	}
+	glPopMatrix();
+	// Draw House Model
+	/*glPushMatrix();
 	{
 		glTranslatef(0.0, 0.1, 0.0);
 		glRotatef(90.0f, 1.0, 0.0, 0.0);
-		model_house.Draw();
+		//model_house.Draw();
 	}
 	glPopMatrix();
 
@@ -352,7 +373,7 @@ void myDisplay(void) {
 
 		glPushMatrix();
 		{
-			player.drawBounds();
+			//player.drawBounds();
 		}
 		glPopMatrix();
 
@@ -372,7 +393,7 @@ void myDisplay(void) {
 
 		glColor3f(1.0, 1.0, 1.0);
 	}
-
+	*/
 	//Draw Sky Box
 	glPushMatrix();
 	{
@@ -712,6 +733,9 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_player.Load("Models/player/player.3ds");
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
+	model_coin.Load("Models/coin/coin.3ds");
+	model_stone.Load("models/rock/rock.3DS");
+
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
