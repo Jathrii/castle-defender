@@ -8,12 +8,20 @@
 #include "Node.h"
 #include <glut.h>
 #include <cmath>
+#include <iostream>
+using namespace std;
 
 #define ESCAPE 27
 #define SPACEBAR 32
 
 int WIDTH = 1280;
 int HEIGHT = 720;
+int PlayerScore = 0;
+float CastleHealth=1270;
+float RandomEnemyX;
+float RandomEnemyY;
+int CurrentEnemyNumber = 1;
+int EnemySize = 0;
 
 GLuint tex;
 
@@ -34,7 +42,8 @@ Model_3DS model_skeleton;
 
 // Collidable Variables
 Collidable player;
-LinkedList enemies;
+Collidable Castle;
+LinkedList enemies = LinkedList();;
 
 // Textures
 GLTexture tex_ground;
@@ -202,9 +211,42 @@ void axes(double length) {
 	}
 	glPopMatrix();
 }
+//Draw Castle Health .. decreases with monster hits
 
 //=======================================================================
-// Draw Crosshairs
+void UpdateCastleHealth(){
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex3f(1000, 10, 0);
+	glVertex3f(CastleHealth, 10, 0);
+	glVertex3f(CastleHealth, 35, 0);
+	glVertex3f(1000, 35, 0);
+	glEnd();
+	glPopMatrix();
+
+
+}
+//Print UI
+//=======================================================================
+void print(int x, int y, char *string)
+{
+	int len, i;
+
+	//set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(x, y);
+
+	//get the length of the string to display
+	len = (int)strlen(string);
+
+	//loop to display character by character
+	for (i = 0; i < len; i++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string[i]);
+	}
+}
+// Draw Crosshairs - Has drawing of UI and Castle health
 //=======================================================================
 void drawCrosshairs() {
 	glPushMatrix();
@@ -234,12 +276,18 @@ void drawCrosshairs() {
 		glEnd();
 		glColor3f(1.0f, 1.0f, 1.0f);
 	}
+	char* p0s[20];
+	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
+	print(10, 30, (char *)p0s);
+	UpdateCastleHealth();
+
 	glPopMatrix();
 }
 
 //=======================================================================
 // Display Function
 //=======================================================================
+
 void myDisplay(void) {
 	setupCamera();
 
@@ -252,19 +300,28 @@ void myDisplay(void) {
 
 	bool collision = false;
 	Node* current = enemies.head;
-	while (current) {
-		collision |= (player & *(current->data));
+	while (current->next) {
+		collision |= (Castle & *((current)->data));
+		if (collision) {
+			current->next = (current->next)->next;
+			cout << collision << " " << "Castle was hit " << endl;
+
+		}
+		collision = false;
+		cout << enemies.length << " " << "length After Removing " << endl;
+
 		current = current->next;
 	}
 
-	if (collision) {
+	/*if (collision) {
 		glPushMatrix();
 		{
 			glTranslatef(0.0, 10.0, 0.0);
 			glutSolidSphere(2, 10, 10);
+			cout << collision << " " << "Player hit something " << endl;
 		}
 		glPopMatrix();
-	}
+	}*/
 
 	// Draw Center Sphere
 	glutSolidSphere(0.5, 10, 10);
@@ -278,7 +335,7 @@ void myDisplay(void) {
 	// Draw Tree Model
 	glPushMatrix();
 	{
-		glTranslatef(10.0f, 0.0f, 0.0f);
+		glTranslatef(-15.0f, 0.0f, 0.0f);
 		glScalef(0.7f, 0.7f, 0.7f);
 		model_tree.Draw();
 	}
@@ -287,9 +344,10 @@ void myDisplay(void) {
 	// Draw House Model
 	glPushMatrix();
 	{
-		glTranslatef(0.0, 0.1, 0.0);
-		glRotatef(90.0f, 1.0, 0.0, 0.0);
-		model_house.Draw();
+
+		//model_house.Draw();
+		Castle.draw();
+
 	}
 	glPopMatrix();
 
@@ -319,6 +377,18 @@ void myDisplay(void) {
 		glPushMatrix();
 		{
 			player.drawBounds();
+			//Castle.drawBounds();
+			
+		}
+		glPopMatrix();
+
+
+		glPushMatrix();
+		{
+			glColor4f(0.4, 0.1, 0.0, 0.5);
+
+			Castle.drawBounds();
+
 		}
 		glPopMatrix();
 
@@ -538,19 +608,35 @@ void myInit(void)
 	player.bound_radius = 60;
 	player.bound_height = 90;
 
+	//Initialize Castle bounds
+
+	Castle.model = model_house;
+	Castle.bound_radius = 4;
+	Castle.bound_height = 2;
+	Castle.scale = 1;
+	Castle.pos = Vector3f(0, 0.1, -18);
+	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+
+	
+
 	Collidable* tree;
-	// Initialize Enemies
-	enemies = LinkedList();
-	for (int i = 0; i < 3; i++) {
-		Collidable* enemy = new Collidable();
-		enemy->model = model_skeleton;
-		enemy->pos = Vector3f(5.0, 2.149, 8.0 + i);
-		enemy->rot = Vector3f(90.0, 45.0, 0);
-		enemy->scale = 0.05;
-		enemy->bound_radius = 20;
-		enemy->bound_height = 0;
-		enemies.add(enemy);
-	}
+	// Spawn at firsr or when we emptied the list {
+	if (enemies.length == 0){
+		cout << enemies.length << " " << "Enemy List is now Empty " << endl;
+
+		
+		for (int i = 0; i < 3; i++) {
+
+			Collidable* enemy = new Collidable();
+			enemy->model = model_skeleton;
+			enemy->pos = Vector3f(-2, 2.149, -15 + i);
+			enemy->rot = Vector3f(90.0, 180.0, 0);
+			enemy->scale = 0.05;
+			enemy->bound_radius = 20;
+			enemy->bound_height = 0;
+			enemies.add(enemy);
+		}
+}
 
 	// Initialize Flow Control Variables
 	showBounds = false;
