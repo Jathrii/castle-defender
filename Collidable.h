@@ -30,7 +30,7 @@ public:
 
 	void draw();
 
-	void move();
+	void move(float d);
 };
 
 #endif COLLIDABLE_H

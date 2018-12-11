@@ -232,15 +232,15 @@ void RenderGround()
 	{
 		glBegin(GL_QUADS);
 		{
-			glNormal3f(0, 1, 0);	// Set quad normal direction.
-			glTexCoord2f(0, 0);		// Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
-			glVertex3f(-20, 0, -20);
-			glTexCoord2f(10, 0);
-			glVertex3f(20, 0, -20);
-			glTexCoord2f(10, 10);
-			glVertex3f(20, 0, 20);
-			glTexCoord2f(0, 10);
-			glVertex3f(-20, 0, 20);
+			glNormal3f(0, 1, 0);    // Set quad normal direction.
+			glTexCoord2f(0, 0);        // Set tex coordinates ( Using (0,0) -> (5,5) with texture wrapping set to GL_REPEAT to simulate the ground repeated grass texture).
+			glVertex3f(-200, 0, -200);
+			glTexCoord2f(200, 0);
+			glVertex3f(200, 0, -200);
+			glTexCoord2f(200, 200);
+			glVertex3f(200, 0, 200);
+			glTexCoord2f(0, 200);
+			glVertex3f(-200, 0, 200);
 		}
 		glEnd();
 	}
@@ -428,17 +428,11 @@ void myDisplay(void) {
 
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
 
-
-	
-
-
-
-
 	// Draw Center Sphere
-	glutSolidSphere(0.5, 10, 10);
+	//glutSolidSphere(0.5, 10, 10);
 
 	// Draw Axes
-	axes(30);
+	//axes(30);
 
 	// Draw Camera Eye & Center
 	/*
@@ -478,36 +472,11 @@ void myDisplay(void) {
 	// Draw Ground
 	RenderGround();
 
-	//draw coin/collectiable model
-	glPushMatrix();
-	{
-		glTranslatef(18.0f, 6.0f, 3.0f);
-		glScalef(0.8f, 0.8f, 0.8f);
-		//glColor3f(0.8f,0.7f,0.4f);
-		glRotatef(90, 10, 0, 0);
-		//model_coin.Draw();
-	}
-	glPopMatrix();
-	//draw stone
-	glPushMatrix();
-	{
-		//glTranslatef(0.0f, 6.0f, 0.0f);
-		//glScalef(2.8f, 2.8f, 2.8f);
-		Stone.draw();
-
-	}
-	glPopMatrix();
-
 
 	// Draw House Model
-
-
 	glPushMatrix();
 	{
-
-		//model_house.Draw();
 		Castle.draw();
-
 	}
 	glPopMatrix();
 
@@ -652,12 +621,17 @@ void addStone() {
 	//Hit = true;
 	Collidable* c = new Collidable();
 	c->model = model_stone;
-	c->pos.x = player.pos.x;
-	if (firstPerson)
+	if (firstPerson) {
+		c->pos.x = firstPersonCamera.eye.x;
 		c->pos.y = firstPersonCamera.eye.y * 0.7;
-	else
+		c->pos.z = firstPersonCamera.eye.z;
+	}
+	else {
+		c->pos.x = thirdPersonCamera.eye.x;
 		c->pos.y = thirdPersonCamera.eye.y * 0.7;
-	c->pos.z = player.pos.z;
+		c->pos.z = thirdPersonCamera.eye.z;
+	}
+	
 	Vector3f view;
 	if (firstPerson) {
 		view = firstPersonCamera.getView();
@@ -666,6 +640,7 @@ void addStone() {
 		view = thirdPersonCamera.getView();
 	}
 	c->momentum = view;
+	c->weight = 0.005;
 	c->rot = Vector3f(90.0, 0, 0);
 	c->scale = 0.1;
 	c->bound_radius = 1;
@@ -682,8 +657,11 @@ void moveStones() {
 		Collidable Stone = *(current->data);
 
 		//Stone.scale = 0.08;
+		Stone.move(0.8);
+		/*
 		Stone.pos.x += Stone.momentum.x * 0.8;
 		Stone.pos.z += Stone.momentum.z * 0.8;
+		*/
 		//cout << Stone.pos.z << " " << "here " << Stone.momentum.z << endl;
 		*(current->data) = Stone;
 

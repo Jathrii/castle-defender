@@ -52,7 +52,7 @@ void Collidable::draw() {
 	model.Draw();
 }
 
-void Collidable::move() {
-	pos = pos + momentum;
+void Collidable::move(float d) {
+	pos = pos + momentum * d;
 	momentum.y -= weight;
 }
