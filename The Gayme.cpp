@@ -33,7 +33,7 @@ int CurrentEnemyNumber = 1;
 int EnemySize = 0;
 char* GameOver = "";
 bool Hit = false;
-bool Level1 = false;
+bool Level1 = true;
 GLuint tex;
 
 GLuint day;
@@ -402,17 +402,18 @@ void myDisplay(void) {
 	if (enemies.length == 0){
 
 		if (Level1){
-		
 			for (int i = 0; i < 10; i++)
 			{
-				/*Collidable* enemy = new Collidable();
+				float RandZ =  (std::rand() % (20));
+				float RandX =-3.3+ (std::rand() % (7)) ;
+				Collidable* enemy = new Collidable();
 				enemy->model = model_knight;
-				enemy->pos = Vector3f(0.0f, 0.0f, 0.0f);;
-				enemy->rot = Vector3f(0, 0, 0);
+				enemy->pos = Vector3f(RandX, 0.0f, RandZ);;
+				enemy->rot = Vector3f(0, 180, 0);
 				enemy->scale = 1;
-				enemy->bound_radius = 20;
-				enemy->bound_height = 0;
-				enemies.add(enemy);*/
+				enemy->bound_radius = 0.6;
+				enemy->bound_height = 1;
+				enemies.add(enemy);
 			}
 		}
 		else{
@@ -439,7 +440,6 @@ void myDisplay(void) {
 			X = (std::rand() % (30)) + -10;
 			Collidable* c = new Collidable();
 			c->model = model_coin;
-			cout << Z << " " << "Z position " << endl;
 			c->pos = Vector3f(X, 0.7, Z);
 			c->rot = Vector3f(90.0, 0, 0);
 			c->scale = 0.5;
@@ -455,30 +455,42 @@ void myDisplay(void) {
 		}
 	
 
-	bool collision = false;
-	Node* current = enemies.head;
+	bool HitCastle = false;
+
+	// Check if the Castle was hit
+	Node*current =enemies.head;
+	Node* previous = NULL;
 
 	while (current) {
-		collision |= (Castle & *((current)->data));
-		if (collision) {
-			//current->next = (current->next)->next;
-			//cout << collision << " " << "Castle was hit " << endl;
-			CastleHealth += 10;
-			if (CastleHealth >= 1270){
-				CastleHealth = 1270; // Don't Make the bar show 
-				GameOver = "Game Over and Goodbye"; // Print Goodbye
+		HitCastle |= (Castle & *((current)->data));
+		if (HitCastle) {
+			if (current == enemies.head)
+			{
+				enemies = LinkedList(); 
+				Level1 = false; // Remember do to the same with Killing them 
+			}
+			else{
+				previous->next = current->next;
 			}
 
-		}
-		collision = false;
+			//cout << collision << " " << "Some Collectible was collected" << endl;
+			CastleHealth += 10;
+		
 
+		}
+		if (CastleHealth >= 1270){
+			CastleHealth = 1270;
+			GameOver = "Goodbye and Goodnight";
+		}
+		HitCastle = false;
+		previous = current;
 		current = current->next;
 	}
 	bool HitCollectible = false;
 
 	// Check if a Collectible was collected
 	 current = Collectibles.head;
-	 Node* previous;
+	  previous=NULL;
 
 	while (current) {
 		HitCollectible |= (player & *((current)->data));
@@ -545,15 +557,7 @@ void myDisplay(void) {
 
 	// Draw Ground
 	RenderGround();
-	//draw knight
-	glPushMatrix();
-	{
-		glTranslatef(6.0f, 0.0f, 0.0f);
-		//glScalef(2.8f, 2.8f, 2.8f);
 
-		model_knight.Draw();
-	}
-	glPopMatrix();
 
 
 	// Draw Tree Model
@@ -728,6 +732,21 @@ void ShootEnemy(int extravar) {
 	//glutPostRedisplay();
 
 	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
+
+}
+//=======================================================================
+// Move Enemy
+//=======================================================================
+void MoveEnemy(int extravar) {
+	
+	Node* current = enemies.head;
+	while (current) {
+		(current->data)->pos.z -= 0.01;
+
+
+		current = current->next;
+	}
+	glutTimerFunc(1000.0 / 60.0, MoveEnemy, 0);
 
 }
 //=======================================================================
@@ -1146,6 +1165,7 @@ void main(int argc, char** argv)
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 	glutIdleFunc(Redisplay);
+	glutTimerFunc(100, MoveEnemy, 0);
 	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 
 	glutReshapeFunc(myReshape);
