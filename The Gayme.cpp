@@ -472,7 +472,7 @@ void myDisplay(void) {
 		Collidable* c = new Collidable();
 		c->model = model_stone;
 		c->pos.x = player.pos.x;
-		c->pos.y = player.pos.y + 100;
+		c->pos.y = player.pos.y;
 		c->pos.z = player.pos.z;
 		Vector3f view;
 		if (firstPerson) {
@@ -582,7 +582,6 @@ void myDisplay(void) {
 	bool stonehit = false;
 	current = Stones.head;
 	previous = NULL;
-	// << Stones.head << " " << "stone hit " << endl;
 	while (current) {
 		Node* Enemy = enemies.head;
 		Node* lastEnemy = NULL;
@@ -869,8 +868,8 @@ void ShootEnemy(int extravar) {
 		Collidable Stone = *(current->data);
 
 		//Stone.scale = 0.08;
-		Stone.pos.x += Stone.momentum.x + 0.1;
-		Stone.pos.z += Stone.momentum.z + 0.1;
+		Stone.pos.x += Stone.momentum.x + 0.008;
+		Stone.pos.z += Stone.momentum.z + 0.008;
 		//cout << Stone.pos.z << " " << "here " << Stone.momentum.z << endl;
 		*(current->data) = Stone;
 
