@@ -480,8 +480,13 @@ void myDisplay(void) {
 					previous->next = current->next;
 				}
 			
+				if (Level1){
+					CastleHealth += 18;
+				}
+				else{
+					CastleHealth += 22;
 
-			CastleHealth += 10;
+				}
 			HitCastle = false;
 
 		
@@ -495,7 +500,14 @@ void myDisplay(void) {
 		previous = current;
 		current = current->next;
 	}
-	i = 0;
+	if (enemies.head == NULL)
+
+	{
+		if (Level1){
+			enemies = LinkedList();
+			Level1 = false;
+		}
+	}
 	bool HitCollectible = false;
 
 	// Check if a Collectible was collected
