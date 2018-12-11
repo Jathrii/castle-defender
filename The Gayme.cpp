@@ -32,8 +32,10 @@ float RandomEnemyX;
 float RandomEnemyY;
 int CurrentEnemyNumber = 1;
 int EnemySize = 0;
-char* GameOver = "";
+char* GameOverText = "";
+bool GameOver = false;
 bool Hit = false;
+bool Level1 = true;
 GLuint tex;
 
 
@@ -58,6 +60,8 @@ Model_3DS model_player;
 Model_3DS model_skeleton;
 Model_3DS model_coin;
 Model_3DS model_stone;
+Model_3DS model_knight;
+
 
 // Collidable Variables
 Collidable player;
@@ -370,7 +374,7 @@ void drawCrosshairs() {
 	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
 	print(10, 30, (char *)p0s);
 
-	print(500, 30, GameOver);
+	print(500, 30, GameOverText);
 	UpdateCastleHealth();
 
 	glPopMatrix();
@@ -404,29 +408,55 @@ void myDisplay(void) {
 
 
 
-	if (enemies.length == 0){
+	if (enemies.length == 0 &&!GameOver){
 
+		if (Level1){
+			glEnable(GL_LIGHT0);
 
-		for (int i = 0; i < 3; i++) {
-
-			Collidable* enemy = new Collidable();
-			enemy->model = model_skeleton;
-			enemy->pos = Vector3f(-2, 2.149,  i);
-			enemy->rot = Vector3f(90.0, 180.0, 0);
-			enemy->scale = 0.05;
-			enemy->bound_radius = 20;
-			enemy->bound_height = 0;
-			enemies.add(enemy);
+			for (int i = 0; i < 10; i++)
+			{
+				float RandZ =  (std::rand() % (20));
+				float RandX =-3.3+ (std::rand() % (7)) ;
+				Collidable* enemy = new Collidable();
+				enemy->model = model_knight;
+				enemy->pos = Vector3f(RandX, 0.0f, RandZ);;
+				enemy->rot = Vector3f(0, 180, 0);
+				enemy->scale = 1;
+				enemy->bound_radius = 0.6;
+				enemy->bound_height = 1;
+				enemies.add(enemy);
+			}
 		}
-	}
+		else{
+			glDisable(GL_LIGHT0);
+
+			for (int i = 0; i < 10; i++)
+			{
+				float RandZ = (std::rand() % (20));
+				float RandX = -3.3 + (std::rand() % (7));
+				Collidable* enemy = new Collidable();
+				enemy->model = model_skeleton;
+				enemy->pos = Vector3f(RandX, 1.8f, RandZ);;
+				enemy->rot = Vector3f(90, 180, 0);
+				enemy->scale = 0.04;
+				enemy->bound_radius = 20;
+				enemy->bound_height = 0;
+				enemies.add(enemy);
+			}
+
+
+		}
+		}
+	
 	// Add New collectibles 
-	if (Collectibles.length == 0){
-		for (int i = 0; i < 10; i++){
+	if (Collectibles.length==0){
+		cout << Collectibles.length << " " << "Length " << endl;
+
+		for (int i =0; i < 10; i++){
 			Z = -18 + (std::rand() % (36));
 			X = (std::rand() % (30)) + -10;
 			Collidable* c = new Collidable();
 			c->model = model_coin;
-			cout << Z << " " << "Z position " << endl;
 			c->pos = Vector3f(X, 0.7, Z);
 			c->rot = Vector3f(90.0, 0, 0);
 			c->scale = 0.5;
@@ -442,43 +472,79 @@ void myDisplay(void) {
 		}
 	
 
-	bool collision = false;
-	Node* current = enemies.head;
+	bool HitCastle = false;
 
+	// Check if the Castle was hit
+	Node*current =enemies.head;
+	Node* previous = NULL;
+	int i = 0;
 	while (current) {
-		collision |= (Castle & *((current)->data));
-		if (collision) {
-			//current->next = (current->next)->next;
-			//cout << collision << " " << "Castle was hit " << endl;
-			CastleHealth += 10;
-			if (CastleHealth >= 1270){
-				CastleHealth = 1270; // Don't Make the bar show 
-				GameOver = "Game Over and Goodbye"; // Print Goodbye
-			}
+
+		HitCastle |= (Castle & *((current)->data));
+		if (HitCastle) {
+			cout << i << " " << "Hit Castle " << endl;
+
+
+				if (current == enemies.head){
+					enemies.head = current->next;
+				}
+				else{
+					previous->next = current->next;
+				}
+			
+				if (Level1){
+					CastleHealth += 22;
+				}
+				else{
+					CastleHealth += 27; // More Damage
+
+				}
+			HitCastle = false;
+
+		
 
 		}
-		collision = false;
-
+		if (CastleHealth >= 1270){
+			CastleHealth = 1270;
+			GameOver = true; // Either the Health of the castle is finished or All enemies die 
+			GameOverText = "Game Over and goodbye";
+		}
+		previous = current;
 		current = current->next;
+	}
+	if (enemies.head == NULL)
+
+	{
+		if (Level1){
+			enemies = LinkedList();
+			Level1 = false;
+		}
+		else{
+			if (CastleHealth < 1270){
+				GameOver = true; // The Player Won
+				GameOverText = "GoodJob Sucka!";
+			}
+		}
 	}
 	bool HitCollectible = false;
 
 	// Check if a Collectible was collected
 	 current = Collectibles.head;
-	 Node* previous;
+	  previous=NULL;
 
 	while (current) {
 		HitCollectible |= (player & *((current)->data));
 		if (HitCollectible) {
-			if (current == Collectibles.head)
-			{
-				Collectibles =  LinkedList();
-			}
-			else{
-				previous->next = current->next;
+
+			
+				if (current == Collectibles.head){
+					Collectibles.head = current->next;
+				}
+				else{
+					previous->next = current->next;
+				
 			}
 			
-			//cout << collision << " " << "Some Collectible was collected" << endl;
 			CastleHealth -= 10;
 
 		}
@@ -486,6 +552,14 @@ void myDisplay(void) {
 		previous = current;
 		current = current->next;
 	}
+	if (Collectibles.head == NULL)
+
+	{
+
+		Collectibles =  LinkedList();
+	}
+		
+
 
 
 
@@ -502,13 +576,13 @@ void myDisplay(void) {
 	glPushMatrix();
 	{
 		glTranslatef(firstPersonCamera.eye.x, firstPersonCamera.eye.y, firstPersonCamera.eye.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
 		glTranslatef(thirdPersonCamera.eye.x, thirdPersonCamera.eye.y, thirdPersonCamera.eye.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -517,13 +591,13 @@ void myDisplay(void) {
 	glPushMatrix();
 	{
 		glTranslatef(firstPersonCamera.center.x, firstPersonCamera.center.y, firstPersonCamera.center.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
 		glTranslatef(thirdPersonCamera.center.x, thirdPersonCamera.center.y, thirdPersonCamera.center.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -532,6 +606,8 @@ void myDisplay(void) {
 
 	// Draw Ground
 	RenderGround();
+
+
 
 	// Draw Tree Model
 	glPushMatrix();
@@ -684,7 +760,7 @@ void myDisplay(void) {
 
 	glutSwapBuffers();
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 //=======================================================================
 // Timer Functions
@@ -708,6 +784,21 @@ void ShootEnemy(int extravar) {
 
 }
 //=======================================================================
+// Move Enemy
+//=======================================================================
+void MoveEnemy(int extravar) {
+	
+	Node* current = enemies.head;
+	while (current) {
+		(current->data)->pos.z -= 0.01;
+
+
+		current = current->next;
+	}
+	glutTimerFunc(1000.0 / 60.0, MoveEnemy, 0);
+
+}
+//=======================================================================
 // Keyboard Function
 //=======================================================================
 void myKeyboard(unsigned char key, int x, int y) {
@@ -724,15 +815,17 @@ void myKeyboard(unsigned char key, int x, int y) {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
 				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
 			}
-			firstPersonCamera.moveZ(d);
-			thirdPersonCamera.moveZ(d);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos.x += view.x * d;
-			player.pos.z += view.z * d;
+			view = view * d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 's':
@@ -742,15 +835,18 @@ void myKeyboard(unsigned char key, int x, int y) {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
 				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
 			}
-			firstPersonCamera.moveZ(-d);
-			thirdPersonCamera.moveZ(-d);
+
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos.x += view.x * -d;
-			player.pos.z += view.z * -d;
+			view = view * -d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 'a':
@@ -760,14 +856,17 @@ void myKeyboard(unsigned char key, int x, int y) {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
 				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
 			}
-			firstPersonCamera.moveX(d);
-			thirdPersonCamera.moveX(d);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos = player.pos + right * d;
+			right = right * d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
+			player.pos = player.pos + right;
 		}
 		break;
 	case 'd':
@@ -777,14 +876,17 @@ void myKeyboard(unsigned char key, int x, int y) {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
 				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
 			}
-			firstPersonCamera.moveX(-d);
-			thirdPersonCamera.moveX(-d);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos = player.pos + right * -d;
+			right = right * -d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
+			player.pos = player.pos + right;
 		}
 		break;
 	case 'q':
@@ -896,6 +998,7 @@ void myPassiveMotion(int x, int y) {
 		return;
 	}
 
+
 	y = HEIGHT - y;
 
 	int diffx = x - WIDTH / 2;
@@ -917,17 +1020,17 @@ void myPassiveMotion(int x, int y) {
 		*/
 	}
 	else {
-		firstPersonCamera.center.y += diffy * 0.01;
-		thirdPersonCamera.center.y += diffy * 0.01;
+		firstPersonCamera.center.y += diffy * 0.05;
+		thirdPersonCamera.center.y += diffy * 0.05;
 
-		if (firstPersonCamera.center.y < 0)
-			firstPersonCamera.center.y = 0;
-		else if (firstPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
-			firstPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
-		if (thirdPersonCamera.center.y < 0)
-			thirdPersonCamera.center.y = 0;
-		else if (thirdPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
-			thirdPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		if (firstPersonCamera.center.y < -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			firstPersonCamera.center.y = -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		else if (firstPersonCamera.center.y > 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			firstPersonCamera.center.y = 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		if (thirdPersonCamera.center.y < -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			thirdPersonCamera.center.y = -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		else if (thirdPersonCamera.center.y > 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			thirdPersonCamera.center.y = 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
 
 		float camera_speed = 0.5;
 
@@ -935,11 +1038,7 @@ void myPassiveMotion(int x, int y) {
 		firstPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
 		thirdPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
 
-		float angle;
-		if (firstPerson)
-			angle = RAD2DEG(atan2(firstPersonCamera.center.z - firstPersonCamera.eye.z, firstPersonCamera.center.x - firstPersonCamera.eye.x));
-		else
-			angle = RAD2DEG(atan2(thirdPersonCamera.center.z - thirdPersonCamera.eye.z, thirdPersonCamera.center.x - thirdPersonCamera.eye.x));
+		float angle = RAD2DEG(atan2(firstPersonCamera.center.z - firstPersonCamera.eye.z, firstPersonCamera.center.x - firstPersonCamera.eye.x));
 		player.rot.y = 90 - angle;
 	}
 
@@ -1088,17 +1187,17 @@ void myInit(void)
 	// Initialize Camera & Cursor Positions
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 
-	// First Person View
-	firstPersonCamera.eye = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, -1.5);
-	firstPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 2);
+	// First Person Camera
+	firstPersonCamera.eye = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 0.0);
+	firstPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 20);
 	firstPersonCamera.up = Vector3f(0, 1, 0);
 
-	// Third Person View
+	// Third Person Camera
 	thirdPersonCamera.eye = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, -1.5);
-	thirdPersonCamera.center = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, 2);
+	thirdPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 20);
 	thirdPersonCamera.up = Vector3f(0, 1, 0);
 
-	// Free Roaming
+	// Free View Camera
 	freeCamera.center = Vector3f(0, 0, 0);
 	freeCamera.eye = Vector3f(20, 10, 20);
 	freeCamera.up = Vector3f(0, 1, 0);
@@ -1124,6 +1223,8 @@ void LoadAssets()
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
 	model_coin.Load("Models/coin/coin.3ds");
 	model_stone.Load("models/rock/rock.3DS");
+	model_knight.Load("models/chevalier/chevalier.3DS");
+
 
 
 	// Loading texture files
@@ -1169,6 +1270,7 @@ void main(int argc, char** argv)
 
 	glutSetCursor(GLUT_CURSOR_NONE);
 	glutIdleFunc(Redisplay);
+	glutTimerFunc(100, MoveEnemy, 0);
 	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 
 	glutReshapeFunc(myReshape);
