@@ -342,14 +342,10 @@ void print(int x, int y, char *string)
 void drawCrosshairs() {
 	glPushMatrix();
 	{
-		glViewport(0, 0, WIDTH, HEIGHT);
-		glMatrixMode(GL_PROJECTION);
-		glLoadIdentity();
-		glOrtho(0, WIDTH, HEIGHT, 0, -1, 1);
-		glMatrixMode(GL_MODELVIEW);
-		glLoadIdentity();
-
-		glColor3f(0.0f, 0.0f, 0.0f);
+		if (nightTime)
+			glColor3f(1.0f, 1.0f, 1.0f);
+		else
+			glColor3f(0.0f, 0.0f, 0.0f);
 		glLineWidth(3.0);
 		//horizontal line
 		glBegin(GL_LINES);
@@ -367,6 +363,24 @@ void drawCrosshairs() {
 		glEnd();
 		glColor3f(1.0f, 1.0f, 1.0f);
 	}
+
+	glPopMatrix();
+}
+
+void drawHUD() {
+	glBindTexture(GL_TEXTURE_2D, NULL);
+	glDisable(GL_LIGHTING);
+
+	glPushMatrix();
+	glViewport(0, 0, WIDTH, HEIGHT);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	glOrtho(0, WIDTH, HEIGHT, 0, -1, 1);
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+
+	drawCrosshairs();
+
 	char* p0s[20];
 	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
 	print(10, 30, (char *)p0s);
@@ -375,6 +389,8 @@ void drawCrosshairs() {
 	UpdateCastleHealth();
 
 	glPopMatrix();
+
+	glEnable(GL_LIGHTING);
 }
 
 void randomizeLight2() {
@@ -404,12 +420,13 @@ void myDisplay(void) {
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
 
 
-
 	if (enemies.length == 0 && !GameOver) {
 
-		if (Level1) {
-			glEnable(GL_LIGHT0);
+		if ((Level1 && nightTime) || (!Level1 && !nightTime)) {
+			toggleDayCycle();
+		}
 
+		if (Level1) {
 			for (int i = 0; i < 10; i++)
 			{
 				float RandZ = (std::rand() % (20));
@@ -431,7 +448,6 @@ void myDisplay(void) {
 			}
 		}
 		else {
-			glDisable(GL_LIGHT0);
 
 			for (int i = 0; i < 10; i++)
 			{
@@ -820,7 +836,7 @@ void myDisplay(void) {
 	glPopMatrix();
 
 	// Draw HUD Elements
-	drawCrosshairs();
+	drawHUD();
 
 	glutSwapBuffers();
 
