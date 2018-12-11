@@ -500,13 +500,13 @@ void myDisplay(void) {
 	glPushMatrix();
 	{
 		glTranslatef(firstPersonCamera.eye.x, firstPersonCamera.eye.y, firstPersonCamera.eye.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
 		glTranslatef(thirdPersonCamera.eye.x, thirdPersonCamera.eye.y, thirdPersonCamera.eye.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -515,13 +515,13 @@ void myDisplay(void) {
 	glPushMatrix();
 	{
 		glTranslatef(firstPersonCamera.center.x, firstPersonCamera.center.y, firstPersonCamera.center.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
 		glTranslatef(thirdPersonCamera.center.x, thirdPersonCamera.center.y, thirdPersonCamera.center.z);
-		glutSolidSphere(0.3, 10, 10);
+		glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -719,58 +719,68 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(d);
 		else {
-			firstPersonCamera.moveZ(d);
-			thirdPersonCamera.moveZ(d);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos.x += view.x * d;
-			player.pos.z += view.z * d;
+			view = view * d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 's':
 		if (freeView)
 			freeCamera.moveZ(-d);
 		if (!freeView) {
-			firstPersonCamera.moveZ(-d);
-			thirdPersonCamera.moveZ(-d);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos.x += view.x * -d;
-			player.pos.z += view.z * -d;
+			view = view * -d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 'a':
 		if (freeView)
 			freeCamera.moveX(d);
 		else {
-			firstPersonCamera.moveX(d);
-			thirdPersonCamera.moveX(d);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos = player.pos + right * d;
+			right = right * d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
+			player.pos = player.pos + right;
 		}
 		break;
 	case 'd':
 		if (freeView)
 			freeCamera.moveX(-d);
 		else {
-			firstPersonCamera.moveX(-d);
-			thirdPersonCamera.moveX(-d);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
-			player.pos = player.pos + right * -d;
+			right = right * -d;
+			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
+			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
+			player.pos = player.pos + right;
 		}
 		break;
 	case 'q':
@@ -850,6 +860,7 @@ void myPassiveMotion(int x, int y) {
 		return;
 	}
 
+
 	y = HEIGHT - y;
 
 	int diffx = x - WIDTH / 2;
@@ -871,17 +882,17 @@ void myPassiveMotion(int x, int y) {
 		*/
 	}
 	else {
-		firstPersonCamera.center.y += diffy * 0.01;
-		thirdPersonCamera.center.y += diffy * 0.01;
+		firstPersonCamera.center.y += diffy * 0.05;
+		thirdPersonCamera.center.y += diffy * 0.05;
 
-		if (firstPersonCamera.center.y < 0)
-			firstPersonCamera.center.y = 0;
-		else if (firstPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
-			firstPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
-		if (thirdPersonCamera.center.y < 0)
-			thirdPersonCamera.center.y = 0;
-		else if (thirdPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
-			thirdPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		if (firstPersonCamera.center.y < -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			firstPersonCamera.center.y = -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		else if (firstPersonCamera.center.y > 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			firstPersonCamera.center.y = 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		if (thirdPersonCamera.center.y < -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			thirdPersonCamera.center.y = -5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		else if (thirdPersonCamera.center.y > 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			thirdPersonCamera.center.y = 5 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
 
 		float camera_speed = 0.5;
 
@@ -889,11 +900,7 @@ void myPassiveMotion(int x, int y) {
 		firstPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
 		thirdPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
 
-		float angle;
-		if (firstPerson)
-			angle = RAD2DEG(atan2(firstPersonCamera.center.z - firstPersonCamera.eye.z, firstPersonCamera.center.x - firstPersonCamera.eye.x));
-		else
-			angle = RAD2DEG(atan2(thirdPersonCamera.center.z - thirdPersonCamera.eye.z, thirdPersonCamera.center.x - thirdPersonCamera.eye.x));
+		float angle = RAD2DEG(atan2(firstPersonCamera.center.z - firstPersonCamera.eye.z, firstPersonCamera.center.x - firstPersonCamera.eye.x));
 		player.rot.y = 90 - angle;
 	}
 
@@ -1042,17 +1049,17 @@ void myInit(void)
 	// Initialize Camera & Cursor Positions
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 
-	// First Person View
-	firstPersonCamera.eye = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, -1.5);
-	firstPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 2);
+	// First Person Camera
+	firstPersonCamera.eye = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 0.0);
+	firstPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 20);
 	firstPersonCamera.up = Vector3f(0, 1, 0);
 
-	// Third Person View
+	// Third Person Camera
 	thirdPersonCamera.eye = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, -1.5);
-	thirdPersonCamera.center = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, 2);
+	thirdPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 20);
 	thirdPersonCamera.up = Vector3f(0, 1, 0);
 
-	// Free Roaming
+	// Free View Camera
 	freeCamera.center = Vector3f(0, 0, 0);
 	freeCamera.eye = Vector3f(20, 10, 20);
 	freeCamera.up = Vector3f(0, 1, 0);
