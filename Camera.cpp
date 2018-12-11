@@ -76,3 +76,7 @@ void Camera::look() {
 		up.x, up.y, up.z
 	);
 }
+
+Vector3f Camera::getView() {
+	return (center - eye).unit();
+}

@@ -24,6 +24,8 @@ public:
 	void rotateAroundY(float a, Vector3f rotCenter);
 
 	void look();
+
+	Vector3f getView();
 };
 
 #endif CAMERA_H
