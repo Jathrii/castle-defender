@@ -26,7 +26,7 @@ int HEIGHT = 720;
 int X;
 int Z;
 int PlayerScore = 0;
-float CastleHealth=1000;
+float CastleHealth = 1000;
 float RandomEnemyX;
 float RandomEnemyY;
 int CurrentEnemyNumber = 1;
@@ -35,6 +35,10 @@ char* GameOverText = "";
 bool GameOver = false;
 bool Hit = false;
 bool Level1 = true;
+bool addStone = false;
+
+
+
 GLuint tex;
 
 GLuint day;
@@ -66,6 +70,7 @@ Collidable Castle;
 Collidable Stone;
 LinkedList enemies = LinkedList();;
 LinkedList Collectibles = LinkedList();
+LinkedList Stones = LinkedList();
 
 // Textures
 GLTexture tex_ground;
@@ -98,7 +103,7 @@ void setupCamera() {
 			firstPersonCamera.look();
 		else
 			thirdPersonCamera.look();
-}
+	}
 }
 
 //=======================================================================
@@ -373,9 +378,9 @@ void drawCrosshairs() {
 }
 
 void randomizeLight2() {
-	GLfloat ambient2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
-	GLfloat diffuse2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
-	GLfloat specular2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	GLfloat ambient2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
+	GLfloat diffuse2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
+	GLfloat specular2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
 	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
 
 	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
@@ -400,15 +405,15 @@ void myDisplay(void) {
 
 
 
-	if (enemies.length == 0 &&!GameOver){
+	if (enemies.length == 0 && !GameOver){
 
 		if (Level1){
 			glEnable(GL_LIGHT0);
 
 			for (int i = 0; i < 10; i++)
 			{
-				float RandZ =  (std::rand() % (20));
-				float RandX =-3.3+ (std::rand() % (7)) ;
+				float RandZ = (std::rand() % (20));
+				float RandX = -3.3 + (std::rand() % (7));
 				Collidable* enemy = new Collidable();
 				enemy->model = model_knight;
 				enemy->pos = Vector3f(RandX, 0.0f, RandZ);;
@@ -438,13 +443,13 @@ void myDisplay(void) {
 
 
 		}
-		}
-	
+	}
+
 	// Add New collectibles 
-	if (Collectibles.length==0){
+	if (Collectibles.length == 0){
 		cout << Collectibles.length << " " << "Length " << endl;
 
-		for (int i =0; i < 10; i++){
+		for (int i = 0; i < 10; i++){
 			Z = -18 + (std::rand() % (36));
 			X = (std::rand() % (30)) + -10;
 			Collidable* c = new Collidable();
@@ -456,44 +461,76 @@ void myDisplay(void) {
 			c->bound_height = 0;
 			Collectibles.add(c);
 		}
-		
-		
 
 
-		
+
+
+
+	}
+	//create new stone
+	if (addStone){
+		Collidable* c = new Collidable();
+		c->model = model_stone;
+		c->pos.x = player.pos.x;
+		c->pos.y = player.pos.y + 100;
+		c->pos.z = player.pos.z;
+		Vector3f view;
+		if (firstPerson) {
+			view = firstPersonCamera.getView();
 		}
-	
+
+		else {
+			view = thirdPersonCamera.getView();
+		}
+		c->momentum = view;
+		c->rot = Vector3f(90.0, 0, 0);
+		c->scale =10;
+		c->bound_radius = 1;
+		c->bound_height = 0;
+		Stones.add(c);
+		addStone = false;
+	}
+	Collidable* c = new Collidable();
+	c->model = model_stone;
+	c->pos.x = player.pos.x;
+	c->pos.y = player.pos.y-5;
+	c->pos.z = player.pos.z;
+
+	c->rot = Vector3f(90.0, 0, 0);
+	c->scale = 1;
+	c->bound_radius = 1;
+	c->bound_height = 0;
 
 	bool HitCastle = false;
 
 	// Check if the Castle was hit
-	Node*current =enemies.head;
+	Node*current = enemies.head;
 	Node* previous = NULL;
 	int i = 0;
 	while (current) {
 
 		HitCastle |= (Castle & *((current)->data));
 		if (HitCastle) {
-			cout << i << " " << "Hit Castle " << endl;
+			//cout << i << " " << "Hit Castle " << endl;
 
 
-				if (current == enemies.head){
-					enemies.head = current->next;
-				}
-				else{
-					previous->next = current->next;
-				}
-			
-				if (Level1){
-					CastleHealth += 22;
-				}
-				else{
-					CastleHealth += 27; // More Damage
+			if (current == enemies.head){
+				enemies.head = current->next;
+			}
+			else{
+				previous->next = current->next;
+			}
 
-				}
+			if (Level1){
+				CastleHealth += 22;
+			}
+			else{
+				CastleHealth += 27; // More Damage
+
+			}
 			HitCastle = false;
 
-		
+
 
 		}
 		if (CastleHealth >= 1270){
@@ -521,22 +558,22 @@ void myDisplay(void) {
 	bool HitCollectible = false;
 
 	// Check if a Collectible was collected
-	 current = Collectibles.head;
-	  previous=NULL;
+	current = Collectibles.head;
+	previous = NULL;
 
 	while (current) {
 		HitCollectible |= (player & *((current)->data));
 		if (HitCollectible) {
 
-			
-				if (current == Collectibles.head){
-					Collectibles.head = current->next;
-				}
-				else{
-					previous->next = current->next;
-				
+
+			if (current == Collectibles.head){
+				Collectibles.head = current->next;
 			}
-			
+			else{
+				previous->next = current->next;
+
+			}
+
 			CastleHealth -= 10;
 
 		}
@@ -548,9 +585,61 @@ void myDisplay(void) {
 
 	{
 
-		Collectibles =  LinkedList();
+		Collectibles = LinkedList();
 	}
-		
+
+	bool stonehit = false;
+	current = Stones.head;
+	previous = NULL;
+	while (current) {
+		Node* Enemy = enemies.head;
+		Node* lastEnemy = NULL;
+		cout << stonehit << " " << "first loop " << endl;
+		while (Enemy){
+			stonehit |= (*((Enemy)->data) & *((current)->data));
+			if (stonehit) {
+				cout << stonehit << " " << "stone Correct " << endl;
+
+				if (current == Stones.head){
+					Stones.head = current->next;
+				}
+				else{
+					previous->next = current->next;
+
+				}
+
+				if (Enemy == enemies.head){
+					enemies.head = Enemy->next;
+				}
+				else{
+					lastEnemy->next = Enemy->next;
+
+				}
+
+				PlayerScore += 10;
+
+			}
+			lastEnemy = Enemy;
+			Enemy = Enemy->next;
+		}
+		/*Collidable Stone = *(current->data);
+		if (Stone.pos.x > 18 || Stone.pos.x < -18 || Stone.pos.z>20 || Stone.pos.z < -20){
+			if (current == Stones.head){
+				Stones.head = current->next;
+			}
+			else{
+				previous->next = current->next;
+
+			}
+		}*/
+		HitCollectible = false;
+		previous = current;
+		current = current->next;
+	}
+	if (Stones.head == NULL)
+	{
+		Stones = LinkedList();
+	}
 
 
 
@@ -560,21 +649,21 @@ void myDisplay(void) {
 
 	// Draw Axes
 	axes(30);
-	
+
 	// Draw Camera Eye & Center
 	/*
 	// Eye
 	glColor3f(0.0f, 0.0f, 1.0f);
 	glPushMatrix();
 	{
-		glTranslatef(firstPersonCamera.eye.x, firstPersonCamera.eye.y, firstPersonCamera.eye.z);
-		glutSolidSphere(0.05, 10, 10);
+	glTranslatef(firstPersonCamera.eye.x, firstPersonCamera.eye.y, firstPersonCamera.eye.z);
+	glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
-		glTranslatef(thirdPersonCamera.eye.x, thirdPersonCamera.eye.y, thirdPersonCamera.eye.z);
-		glutSolidSphere(0.05, 10, 10);
+	glTranslatef(thirdPersonCamera.eye.x, thirdPersonCamera.eye.y, thirdPersonCamera.eye.z);
+	glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -582,14 +671,14 @@ void myDisplay(void) {
 	glColor3f(1.0f, 0.0f, 0.0f);
 	glPushMatrix();
 	{
-		glTranslatef(firstPersonCamera.center.x, firstPersonCamera.center.y, firstPersonCamera.center.z);
-		glutSolidSphere(0.05, 10, 10);
+	glTranslatef(firstPersonCamera.center.x, firstPersonCamera.center.y, firstPersonCamera.center.z);
+	glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 	glPushMatrix();
 	{
-		glTranslatef(thirdPersonCamera.center.x, thirdPersonCamera.center.y, thirdPersonCamera.center.z);
-		glutSolidSphere(0.05, 10, 10);
+	glTranslatef(thirdPersonCamera.center.x, thirdPersonCamera.center.y, thirdPersonCamera.center.z);
+	glutSolidSphere(0.05, 10, 10);
 	}
 	glPopMatrix();
 
@@ -626,7 +715,7 @@ void myDisplay(void) {
 		glTranslatef(0.0f, 6.0f, 0.0f);
 		//glScalef(2.8f, 2.8f, 2.8f);
 		Stone.draw();
-		
+
 	}
 	glPopMatrix();
 
@@ -647,7 +736,7 @@ void myDisplay(void) {
 	glPushMatrix();
 	{
 		if (!firstPerson || freeView)
-		player.draw();
+			player.draw();
 	}
 	glPopMatrix();
 
@@ -674,7 +763,18 @@ void myDisplay(void) {
 
 		current = current->next;
 	}
+	//draw stone
+	current = Stones.head;
+	while (current) {
 
+		glPushMatrix();
+		{
+			(*(current->data)).draw();
+		}
+		glPopMatrix();
+
+		current = current->next;
+	}
 	if (showBounds) {
 		// Draw Player Bounding Sphere
 		glColor4f(0.5, 0.0, 0.0, 0.5);
@@ -684,7 +784,7 @@ void myDisplay(void) {
 			player.drawBounds();
 			Stone.drawBounds();
 			//Castle.drawBounds();
-			
+
 		}
 		glPopMatrix();
 
@@ -725,6 +825,21 @@ void myDisplay(void) {
 
 			current = current->next;
 		}
+		//stone bounds
+		glColor4f(0.0, 0.0, 0.5, 0.5);
+
+		current = Stones.head;
+		while (current) {
+			glPushMatrix();
+			{
+				(*(current->data)).drawBounds();
+			}
+			glPopMatrix();
+
+			current = current->next;
+		}
+
+
 
 		glColor3f(1.0, 1.0, 1.0);
 	}
@@ -758,17 +873,21 @@ void myDisplay(void) {
 // Timer Functions
 //=======================================================================
 void ShootEnemy(int extravar) {
-	if (Stone.pos.x <18 && Hit){
-		Stone.scale = 0.08;
-		Stone.pos.x += 0.01;
+	Node* current = Stones.head;
+	while (current){
+		Collidable Stone = *(current->data);
+
+		//Stone.scale = 0.08;
+		Stone.pos.x += Stone.momentum.x + 0.1;
+		Stone.pos.z += Stone.momentum.z + 0.1;
+		//cout << Stone.pos.z << " " << "here " << Stone.momentum.z << endl;
+		*(current->data) = Stone;
+
+
+		current = current->next;
 	}
-	else{
-		Hit = false;
-		Stone.pos.x = player.pos.x;
-		Stone.pos.y = player.pos.y;
-		Stone.pos.z = player.pos.z;
-		Stone.scale = 0;
-	}
+
+
 
 	//glutPostRedisplay();
 
@@ -779,7 +898,7 @@ void ShootEnemy(int extravar) {
 // Move Enemy
 //=======================================================================
 void MoveEnemy(int extravar) {
-	
+
 	Node* current = enemies.head;
 	while (current) {
 		(current->data)->pos.z -= 0.01;
@@ -895,8 +1014,8 @@ void myKeyboard(unsigned char key, int x, int y) {
 	case 'h':
 		//cout << PlayerScore << " " << "Player is Hitting " << endl;
 		ShootEnemy(1);
-		Hit = true;
-
+		//Hit = true;
+		addStone = true;
 		break;
 
 	case SPACEBAR:
@@ -957,9 +1076,9 @@ void myPassiveMotion(int x, int y) {
 		/*
 		freeCamera.center.y += diffy * 0.01;
 		if (freeCamera.center.y < 0)
-			freeCamera.center.y = 0;
+		freeCamera.center.y = 0;
 		else if (freeCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
-			freeCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		freeCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
 
 		Vector3f rotationCenter = player.pos + Vector3f(0, player.bound_height * player.scale * 1.5 + 1, 0);
 		float camera_speed = 0.5;
@@ -1014,16 +1133,16 @@ void myMouse(int button, int state, int x, int y)
 	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) {
 		/*
 		if (firstPerson) {
-			firstPersonEye = camera.eye;
-			firstPersonCenter = camera.center;
-			camera.eye = thirdPersonEye;
-			camera.center = thirdPersonCenter;
+		firstPersonEye = camera.eye;
+		firstPersonCenter = camera.center;
+		camera.eye = thirdPersonEye;
+		camera.center = thirdPersonCenter;
 		}
 		else {
-			thirdPersonEye = camera.eye;
-			thirdPersonCenter = camera.center;
-			camera.eye = firstPersonEye;
-			camera.center = firstPersonCenter;
+		thirdPersonEye = camera.eye;
+		thirdPersonCenter = camera.center;
+		camera.eye = firstPersonEye;
+		camera.center = firstPersonCenter;
 		}
 		*/
 		firstPerson = !firstPerson;
@@ -1110,7 +1229,7 @@ void myInit(void)
 	Castle.bound_height = 2;
 	Castle.scale = 1;
 	Castle.pos = Vector3f(0, 0.1, -18);
-	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+	Castle.rot = Vector3f(90.0f, 0.0, 0.0);
 
 	Stone.model = model_stone;
 	Stone.bound_radius = 4;
@@ -1120,7 +1239,7 @@ void myInit(void)
 	Stone.rot = Vector3f(90.0f, 0.0, 0.0);
 
 
-	
+
 
 	Collidable* tree;
 	// Spawn at first
