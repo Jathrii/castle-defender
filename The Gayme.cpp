@@ -403,6 +403,8 @@ void myDisplay(void) {
 	if (enemies.length == 0 &&!GameOver){
 
 		if (Level1){
+			glEnable(GL_LIGHT0);
+
 			for (int i = 0; i < 10; i++)
 			{
 				float RandZ =  (std::rand() % (20));
@@ -418,6 +420,8 @@ void myDisplay(void) {
 			}
 		}
 		else{
+			glDisable(GL_LIGHT0);
+
 			for (int i = 0; i < 10; i++)
 			{
 				float RandZ = (std::rand() % (20));
@@ -778,7 +782,7 @@ void MoveEnemy(int extravar) {
 	
 	Node* current = enemies.head;
 	while (current) {
-		(current->data)->pos.z -= 0.05;
+		(current->data)->pos.z -= 0.01;
 
 
 		current = current->next;
