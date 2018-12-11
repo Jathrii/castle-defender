@@ -27,7 +27,7 @@ float RandomEnemyY;
 int CurrentEnemyNumber = 1;
 int EnemySize = 0;
 char* GameOver = "";
-
+bool Hit = false;
 GLuint tex;
 
 // Camera Instance
@@ -50,6 +50,7 @@ Model_3DS model_stone;
 // Collidable Variables
 Collidable player;
 Collidable Castle;
+Collidable Stone;
 LinkedList enemies = LinkedList();;
 LinkedList Collectibles = LinkedList();
 
@@ -326,17 +327,17 @@ void myDisplay(void) {
 	}
 	// Add New collectibles 
 	if (Collectibles.length <10){
-
-
-
+		
 			Collidable* c = new Collidable();
 			c->model = model_coin;
-			c->pos = Vector3f(X , 0.7, Z);
+			c->pos = Vector3f(X, 0.7, Z);
 			c->rot = Vector3f(90.0, 0, 0);
-			c->scale =0.5;
+			c->scale = 0.5;
 			c->bound_radius = 1;
 			c->bound_height = 0;
 			Collectibles.add(c);
+		
+		
 
 
 		
@@ -369,8 +370,8 @@ void myDisplay(void) {
 	 Node* previous;
 
 	while (current) {
-		collision |= (player & *((current)->data));
-		if (collision) {
+		HitCollectible |= (player & *((current)->data));
+		if (HitCollectible) {
 			if (current == Collectibles.head)
 			{
 				Collectibles =  LinkedList();
@@ -419,14 +420,14 @@ void myDisplay(void) {
 	}
 	glPopMatrix();
 	//draw stone
-	/*glPushMatrix();
+	glPushMatrix();
 	{
 		glTranslatef(0.0f, 6.0f, 0.0f);
 		//glScalef(2.8f, 2.8f, 2.8f);
-
-		model_stone.Draw();
+		Stone.draw();
+		
 	}
-	glPopMatrix();*/
+	glPopMatrix();
 
 
 	// Draw House Model
@@ -549,7 +550,17 @@ void myDisplay(void) {
 // Timer Functions
 //=======================================================================
 void ShootEnemy(int extravar) {
-
+	if (Stone.pos.x <18 && Hit){
+		Stone.scale = 0.08;
+		Stone.pos.x += 0.01;
+	}
+	else{
+		Hit = false;
+		Stone.pos.x = player.pos.x;
+		Stone.pos.y = player.pos.y;
+		Stone.pos.z = player.pos.z;
+		Stone.scale = 0;
+	}
 
 	//glutPostRedisplay();
 
@@ -584,6 +595,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 	case 'h':
 		//cout << PlayerScore << " " << "Player is Hitting " << endl;
 		ShootEnemy(1);
+		Hit = true;
 
 		break;
 
@@ -745,9 +757,16 @@ void myInit(void)
 	Castle.model = model_house;
 	Castle.bound_radius = 4;
 	Castle.bound_height = 2;
-	Castle.scale = 1;
+	Castle.scale = 0;
 	Castle.pos = Vector3f(0, 0.1, -18);
 	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+
+	Stone.model = model_stone;
+	Stone.bound_radius = 4;
+	Stone.bound_height = 2;
+	Stone.scale = 0.08;
+	Stone.pos = Vector3f(player.pos.x, 0, player.pos.z);
+	Stone.rot = Vector3f(90.0f, 0.0, 0.0);
 
 
 	
@@ -787,7 +806,6 @@ void LoadAssets()
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 }
 void Redisplay(){
-	srand((unsigned)time(0));
 	Z = -18+(std::rand() % (36));
 	X= (std::rand() % (30)) + -10;
 	glutPostRedisplay();
