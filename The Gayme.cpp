@@ -481,10 +481,10 @@ void myDisplay(void) {
 				}
 			
 				if (Level1){
-					CastleHealth += 18;
+					CastleHealth += 22;
 				}
 				else{
-					CastleHealth += 22;
+					CastleHealth += 27; // More Damage
 
 				}
 			HitCastle = false;
@@ -506,6 +506,12 @@ void myDisplay(void) {
 		if (Level1){
 			enemies = LinkedList();
 			Level1 = false;
+		}
+		else{
+			if (CastleHealth < 1270){
+				GameOver = true; // The Player Won
+				GameOverText = "GoodJob Sucka!";
+			}
 		}
 	}
 	bool HitCollectible = false;
