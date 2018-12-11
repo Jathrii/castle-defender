@@ -33,6 +33,7 @@ int CurrentEnemyNumber = 1;
 int EnemySize = 0;
 char* GameOver = "";
 bool Hit = false;
+bool Level1 = false;
 GLuint tex;
 
 GLuint day;
@@ -55,6 +56,8 @@ Model_3DS model_player;
 Model_3DS model_skeleton;
 Model_3DS model_coin;
 Model_3DS model_stone;
+Model_3DS model_knight;
+
 
 // Collidable Variables
 Collidable player;
@@ -404,19 +407,37 @@ void myDisplay(void) {
 
 	if (enemies.length == 0){
 
-
-		for (int i = 0; i < 3; i++) {
-
-			Collidable* enemy = new Collidable();
-			enemy->model = model_skeleton;
-			enemy->pos = Vector3f(-2, 2.149,  i);
-			enemy->rot = Vector3f(90.0, 180.0, 0);
-			enemy->scale = 0.05;
-			enemy->bound_radius = 20;
-			enemy->bound_height = 0;
-			enemies.add(enemy);
+		if (Level1){
+		
+			for (int i = 0; i < 10; i++)
+			{
+				/*Collidable* enemy = new Collidable();
+				enemy->model = model_knight;
+				enemy->pos = Vector3f(0.0f, 0.0f, 0.0f);;
+				enemy->rot = Vector3f(0, 0, 0);
+				enemy->scale = 1;
+				enemy->bound_radius = 20;
+				enemy->bound_height = 0;
+				enemies.add(enemy);*/
+			}
 		}
-	}
+		else{
+			for (int i = 0; i < 10; i++)
+			{
+				Collidable* enemy = new Collidable();
+				enemy->model = model_skeleton;
+				enemy->pos = Vector3f(0.0f, 1.8f, 0.0f);;
+				enemy->rot = Vector3f(90, 180, 0);
+				enemy->scale = 0.05;
+				enemy->bound_radius = 20;
+				enemy->bound_height = 0;
+				enemies.add(enemy);
+			}
+
+
+		}
+		}
+	
 	// Add New collectibles 
 	if (Collectibles.length == 0){
 		for (int i = 0; i < 10; i++){
@@ -530,6 +551,16 @@ void myDisplay(void) {
 
 	// Draw Ground
 	RenderGround();
+	//draw knight
+	glPushMatrix();
+	{
+		glTranslatef(6.0f, 0.0f, 0.0f);
+		//glScalef(2.8f, 2.8f, 2.8f);
+
+		model_knight.Draw();
+	}
+	glPopMatrix();
+
 
 	// Draw Tree Model
 	glPushMatrix();
@@ -1078,6 +1109,8 @@ void LoadAssets()
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
 	model_coin.Load("Models/coin/coin.3ds");
 	model_stone.Load("models/rock/rock.3DS");
+	model_knight.Load("models/chevalier/chevalier.3DS");
+
 
 
 	// Loading texture files
