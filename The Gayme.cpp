@@ -11,10 +11,11 @@
 #include <iostream>
 #include <ctime>
 #include <time.h>
+#include <irrKlang.h>
 using namespace std;
+using namespace irrklang;
+#pragma comment(lib, "irrKlang.lib") // link with irrKlang.dll
 
-
-using namespace std;
 
 #define DEG2RAD(a) (a * 0.0174532925)
 #define RAD2DEG(r) (r * 57.29577951)
@@ -34,6 +35,8 @@ int EnemySize = 0;
 char* GameOver = "";
 bool Hit = false;
 GLuint tex;
+
+
 
 GLuint day;
 GLuint night;
@@ -71,11 +74,16 @@ bool showBounds;
 bool freeView;
 bool firstPerson;
 
+// IrrKlang init
+ISoundEngine* engine = createIrrKlangDevice();
+ISound *footsteps;
+
 // Lighting
 
 GLfloat lightPosition2[] = { 0.0f, 10.0f, 0.0f, 1.0f };
 
 bool nightTime;
+
 
 //=======================================================================
 // Camera Setup Function
@@ -713,6 +721,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(d);
 		else {
+			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+			}
 			firstPersonCamera.moveZ(d);
 			thirdPersonCamera.moveZ(d);
 			Vector3f view;
@@ -728,6 +739,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(-d);
 		if (!freeView) {
+			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+			}
 			firstPersonCamera.moveZ(-d);
 			thirdPersonCamera.moveZ(-d);
 			Vector3f view;
@@ -743,6 +757,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(d);
 		else {
+			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+			}
 			firstPersonCamera.moveX(d);
 			thirdPersonCamera.moveX(d);
 			Vector3f right;
@@ -757,6 +774,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(-d);
 		else {
+			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+			}
 			firstPersonCamera.moveX(-d);
 			thirdPersonCamera.moveX(-d);
 			Vector3f right;
@@ -807,6 +827,38 @@ void myKeyboard(unsigned char key, int x, int y) {
 
 	//glutPostRedisplay();
 }
+
+void myKeyboardUp(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'w':
+		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+			footsteps->stop();
+			footsteps->drop();
+		}
+		break;
+	case 's':
+		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+			footsteps->stop();
+			footsteps->drop();
+		}
+		break;
+	case 'a':
+		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+			footsteps->stop();
+			footsteps->drop();
+		}
+		break;
+	case 'd':
+		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
+			footsteps->stop();
+			footsteps->drop();
+		}
+		break;
+	}
+
+}
+
+
 
 //=======================================================================
 // Special Key Function
@@ -1088,6 +1140,8 @@ void Redisplay(){
 //=======================================================================
 void main(int argc, char** argv)
 {
+
+
 	srand(time(NULL));
 	glutInit(&argc, argv);
 
@@ -1102,6 +1156,8 @@ void main(int argc, char** argv)
 	glutDisplayFunc(myDisplay);
 
 	glutKeyboardFunc(myKeyboard);
+
+	glutKeyboardUpFunc(myKeyboardUp);
 
 	glutSpecialFunc(mySpecial);
 
