@@ -447,7 +447,7 @@ void myDisplay(void) {
 
 	// Add New collectibles 
 	if (Collectibles.length == 0){
-		cout << Collectibles.length << " " << "Length " << endl;
+		//cout << Collectibles.length << " " << "Length " << endl;
 
 		for (int i = 0; i < 10; i++){
 			Z = -18 + (std::rand() % (36));
@@ -484,22 +484,13 @@ void myDisplay(void) {
 		}
 		c->momentum = view;
 		c->rot = Vector3f(90.0, 0, 0);
-		c->scale =10;
+		c->scale = 0.1;
 		c->bound_radius = 1;
 		c->bound_height = 0;
 		Stones.add(c);
 		addStone = false;
 	}
-	Collidable* c = new Collidable();
-	c->model = model_stone;
-	c->pos.x = player.pos.x;
-	c->pos.y = player.pos.y-5;
-	c->pos.z = player.pos.z;
 
-	c->rot = Vector3f(90.0, 0, 0);
-	c->scale = 1;
-	c->bound_radius = 1;
-	c->bound_height = 0;
 
 	bool HitCastle = false;
 
@@ -591,15 +582,15 @@ void myDisplay(void) {
 	bool stonehit = false;
 	current = Stones.head;
 	previous = NULL;
+	// << Stones.head << " " << "stone hit " << endl;
 	while (current) {
 		Node* Enemy = enemies.head;
 		Node* lastEnemy = NULL;
-		cout << stonehit << " " << "first loop " << endl;
+		//cout << stonehit << " " << "first loop " << endl;
 		while (Enemy){
 			stonehit |= (*((Enemy)->data) & *((current)->data));
+			//cout << stonehit << " " << "stone hit " << endl;
 			if (stonehit) {
-				cout << stonehit << " " << "stone Correct " << endl;
-
 				if (current == Stones.head){
 					Stones.head = current->next;
 				}
@@ -622,7 +613,7 @@ void myDisplay(void) {
 			lastEnemy = Enemy;
 			Enemy = Enemy->next;
 		}
-		/*Collidable Stone = *(current->data);
+		Collidable Stone = *(current->data);
 		if (Stone.pos.x > 18 || Stone.pos.x < -18 || Stone.pos.z>20 || Stone.pos.z < -20){
 			if (current == Stones.head){
 				Stones.head = current->next;
@@ -631,7 +622,7 @@ void myDisplay(void) {
 				previous->next = current->next;
 
 			}
-		}*/
+		}
 		HitCollectible = false;
 		previous = current;
 		current = current->next;
@@ -1012,7 +1003,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		freeView = !freeView;
 		break;
 	case 'h':
-		//cout << PlayerScore << " " << "Player is Hitting " << endl;
+		cout << PlayerScore << " " << "Player is Hitting " << endl;
 		ShootEnemy(1);
 		//Hit = true;
 		addStone = true;
