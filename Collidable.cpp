@@ -24,7 +24,7 @@ Collidable::Collidable(Model_3DS &_model, Vector3f &_pos, Vector3f &_rot, Vector
 
 bool Collidable::operator&(Collidable &c) {
 	float x = pos.x - c.pos.x;
-	float y = (pos.y + bound_height * scale) - (c.pos.y + c.bound_height * scale);
+	float y = (pos.y + bound_height * scale) - (c.pos.y + c.bound_height * c.scale);
 	float z = pos.z - c.pos.z;
 	double distSquared = x * x + y * y + z * z;
 	double radiiSumSquared = (bound_radius * scale + c.bound_radius * c.scale);
