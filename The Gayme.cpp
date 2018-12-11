@@ -114,7 +114,7 @@ void initLightSource()
 	glEnable(GL_LIGHT0);
 
 	// Define Light source 0 ambient light
-	GLfloat ambient0[] = { 0.02f, 0.02f, 0.02f, 1.0f };
+	GLfloat ambient0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
 	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
 
 	// Define Light source 0 diffuse light
@@ -126,7 +126,7 @@ void initLightSource()
 	glLightfv(GL_LIGHT0, GL_SPECULAR, specular0);
 
 	// Finally, define light source 0 position in World Space
-	GLfloat lightPosition0[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+	GLfloat lightPosition0[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
 
 
@@ -392,12 +392,6 @@ void myDisplay(void) {
 	setupCamera();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	GLfloat lightIntensity0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity0);
-
-	GLfloat lightPosition0[] = { 0.0f, 100.0f, 0.0f, 0.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
 
 	GLfloat lightPosition1[] = { player.pos.x, player.pos.y, player.pos.z, 1.0f };
 
