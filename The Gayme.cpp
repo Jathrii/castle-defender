@@ -10,6 +10,9 @@
 #include <cmath>
 #include <iostream>
 #include <ctime>
+#include <time.h>
+using namespace std;
+
 
 using namespace std;
 
@@ -20,10 +23,20 @@ using namespace std;
 
 int WIDTH = 1280;
 int HEIGHT = 720;
+int X;
+int Z;
+int PlayerScore = 0;
+float CastleHealth=1000;
+float RandomEnemyX;
+float RandomEnemyY;
+int CurrentEnemyNumber = 1;
+int EnemySize = 0;
+char* GameOver = "";
+bool Hit = false;
+GLuint tex;
 
 GLuint day;
 GLuint night;
-
 // Camera Instance
 Camera freeCamera;
 Camera firstPersonCamera;
@@ -40,10 +53,15 @@ Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_player;
 Model_3DS model_skeleton;
+Model_3DS model_coin;
+Model_3DS model_stone;
 
 // Collidable Variables
 Collidable player;
-LinkedList enemies;
+Collidable Castle;
+Collidable Stone;
+LinkedList enemies = LinkedList();;
+LinkedList Collectibles = LinkedList();
 
 // Textures
 GLTexture tex_ground;
@@ -275,9 +293,42 @@ void axes(double length) {
 	}
 	glPopMatrix();
 }
+//Draw Castle Health .. decreases with monster hits
 
 //=======================================================================
-// Draw Crosshairs
+void UpdateCastleHealth(){
+
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex3f(CastleHealth, 10, 0);
+	glVertex3f(1270, 10, 0);
+	glVertex3f(1270, 35, 0);
+	glVertex3f(CastleHealth, 35, 0);
+	glEnd();
+	glPopMatrix();
+
+
+}
+//Print UI
+//=======================================================================
+void print(int x, int y, char *string)
+{
+	int len, i;
+
+	//set the position of the text in the window using the x and y coordinates
+	glRasterPos2f(x, y);
+
+	//get the length of the string to display
+	len = (int)strlen(string);
+
+	//loop to display character by character
+	for (i = 0; i < len; i++)
+	{
+		glutBitmapCharacter(GLUT_BITMAP_TIMES_ROMAN_24, string[i]);
+	}
+}
+// Draw Crosshairs - Has drawing of UI and Castle health
 //=======================================================================
 void drawCrosshairs() {
 	glPushMatrix();
@@ -307,6 +358,13 @@ void drawCrosshairs() {
 		glEnd();
 		glColor3f(1.0f, 1.0f, 1.0f);
 	}
+	char* p0s[20];
+	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
+	print(10, 30, (char *)p0s);
+
+	print(500, 30, GameOver);
+	UpdateCastleHealth();
+
 	glPopMatrix();
 }
 
@@ -325,6 +383,7 @@ void randomizeLight2() {
 //=======================================================================
 // Display Function
 //=======================================================================
+
 void myDisplay(void) {
 	randomizeLight2();
 	setupCamera();
@@ -342,21 +401,91 @@ void myDisplay(void) {
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
 
 
+
+	if (enemies.length == 0){
+
+
+		for (int i = 0; i < 3; i++) {
+
+			Collidable* enemy = new Collidable();
+			enemy->model = model_skeleton;
+			enemy->pos = Vector3f(-2, 2.149,  i);
+			enemy->rot = Vector3f(90.0, 180.0, 0);
+			enemy->scale = 0.05;
+			enemy->bound_radius = 20;
+			enemy->bound_height = 0;
+			enemies.add(enemy);
+		}
+	}
+	// Add New collectibles 
+	if (Collectibles.length == 0){
+		for (int i = 0; i < 10; i++){
+			Z = -18 + (std::rand() % (36));
+			X = (std::rand() % (30)) + -10;
+			Collidable* c = new Collidable();
+			c->model = model_coin;
+			cout << Z << " " << "Z position " << endl;
+			c->pos = Vector3f(X, 0.7, Z);
+			c->rot = Vector3f(90.0, 0, 0);
+			c->scale = 0.5;
+			c->bound_radius = 1;
+			c->bound_height = 0;
+			Collectibles.add(c);
+		}
+		
+		
+
+
+		
+		}
+	
+
 	bool collision = false;
 	Node* current = enemies.head;
+
 	while (current) {
-		collision |= (player & *(current->data));
+		collision |= (Castle & *((current)->data));
+		if (collision) {
+			//current->next = (current->next)->next;
+			//cout << collision << " " << "Castle was hit " << endl;
+			CastleHealth += 10;
+			if (CastleHealth >= 1270){
+				CastleHealth = 1270; // Don't Make the bar show 
+				GameOver = "Game Over and Goodbye"; // Print Goodbye
+			}
+
+		}
+		collision = false;
+
+		current = current->next;
+	}
+	bool HitCollectible = false;
+
+	// Check if a Collectible was collected
+	 current = Collectibles.head;
+	 Node* previous;
+
+	while (current) {
+		HitCollectible |= (player & *((current)->data));
+		if (HitCollectible) {
+			if (current == Collectibles.head)
+			{
+				Collectibles =  LinkedList();
+			}
+			else{
+				previous->next = current->next;
+			}
+			
+			//cout << collision << " " << "Some Collectible was collected" << endl;
+			CastleHealth -= 10;
+
+		}
+		HitCollectible = false;
+		previous = current;
 		current = current->next;
 	}
 
-	if (collision) {
-		glPushMatrix();
-		{
-			glTranslatef(0.0, 10.0, 0.0);
-			glutSolidSphere(2, 10, 10);
-		}
-		glPopMatrix();
-	}
+
 
 	// Draw Center Sphere
 	glutSolidSphere(0.5, 10, 10);
@@ -405,18 +534,42 @@ void myDisplay(void) {
 	// Draw Tree Model
 	glPushMatrix();
 	{
-		glTranslatef(10.0f, 0.0f, 0.0f);
+		glTranslatef(-15.0f, 0.0f, 0.0f);
 		glScalef(0.7f, 0.7f, 0.7f);
 		model_tree.Draw();
 	}
 	glPopMatrix();
 
-	// Draw House Model
+	//draw coin/collectiable model
 	glPushMatrix();
 	{
-		glTranslatef(0.0, 0.1, 0.0);
-		glRotatef(90.0f, 1.0, 0.0, 0.0);
-		model_house.Draw();
+		glTranslatef(18.0f, 6.0f, 3.0f);
+		glScalef(0.8f, 0.8f, 0.8f);
+		//glColor3f(0.8f,0.7f,0.4f);
+		glRotatef(90, 10, 0, 0);
+		//model_coin.Draw();
+	}
+	glPopMatrix();
+	//draw stone
+	glPushMatrix();
+	{
+		glTranslatef(0.0f, 6.0f, 0.0f);
+		//glScalef(2.8f, 2.8f, 2.8f);
+		Stone.draw();
+		
+	}
+	glPopMatrix();
+
+
+	// Draw House Model
+
+
+	glPushMatrix();
+	{
+
+		//model_house.Draw();
+		Castle.draw();
+
 	}
 	glPopMatrix();
 
@@ -439,6 +592,18 @@ void myDisplay(void) {
 
 		current = current->next;
 	}
+	//draw Collectibles
+	current = Collectibles.head;
+	while (current) {
+
+		glPushMatrix();
+		{
+			(*(current->data)).draw();
+		}
+		glPopMatrix();
+
+		current = current->next;
+	}
 
 	if (showBounds) {
 		// Draw Player Bounding Sphere
@@ -447,6 +612,19 @@ void myDisplay(void) {
 		glPushMatrix();
 		{
 			player.drawBounds();
+			Stone.drawBounds();
+			//Castle.drawBounds();
+			
+		}
+		glPopMatrix();
+
+
+		glPushMatrix();
+		{
+			glColor4f(0.4, 0.1, 0.0, 0.5);
+
+			Castle.drawBounds();
+
 		}
 		glPopMatrix();
 
@@ -454,6 +632,20 @@ void myDisplay(void) {
 		glColor4f(0.0, 0.0, 0.5, 0.5);
 
 		current = enemies.head;
+		while (current) {
+			glPushMatrix();
+			{
+				(*(current->data)).drawBounds();
+			}
+			glPopMatrix();
+
+			current = current->next;
+		}
+
+		// Draw Collectibles
+		glColor4f(0.0, 0.0, 0.5, 0.5);
+
+		current = Collectibles.head;
 		while (current) {
 			glPushMatrix();
 			{
@@ -492,7 +684,27 @@ void myDisplay(void) {
 
 	glutPostRedisplay();
 }
+//=======================================================================
+// Timer Functions
+//=======================================================================
+void ShootEnemy(int extravar) {
+	if (Stone.pos.x <18 && Hit){
+		Stone.scale = 0.08;
+		Stone.pos.x += 0.01;
+	}
+	else{
+		Hit = false;
+		Stone.pos.x = player.pos.x;
+		Stone.pos.y = player.pos.y;
+		Stone.pos.z = player.pos.z;
+		Stone.scale = 0;
+	}
 
+	//glutPostRedisplay();
+
+	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
+
+}
 //=======================================================================
 // Keyboard Function
 //=======================================================================
@@ -585,6 +797,13 @@ void myKeyboard(unsigned char key, int x, int y) {
 		}
 		freeView = !freeView;
 		break;
+	case 'h':
+		//cout << PlayerScore << " " << "Player is Hitting " << endl;
+		ShootEnemy(1);
+		Hit = true;
+
+		break;
+
 	case SPACEBAR:
 		showBounds = !showBounds;
 		break;
@@ -592,7 +811,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		exit(EXIT_SUCCESS);
 	}
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 //=======================================================================
@@ -615,7 +834,7 @@ void mySpecial(int key, int x, int y) {
 		break;
 	}
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 
 // This variable is hack to stop glutWarpPointer from triggering an event callback to Mouse(...)
@@ -682,7 +901,7 @@ void myPassiveMotion(int x, int y) {
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 	just_warped = true;
 
-	glutPostRedisplay();	//Re-draw scene 
+	//glutPostRedisplay();	//Re-draw scene 
 }
 
 void myMotion(int x, int y) {
@@ -790,21 +1009,30 @@ void myInit(void)
 
 	// Initialize Player Bounds
 	player.bound_radius = 60;
-	player.bound_height = 90;
+	player.bound_height = 80;
+
+	//Initialize Castle bounds
+
+	Castle.model = model_house;
+	Castle.bound_radius = 4;
+	Castle.bound_height = 2;
+	Castle.scale = 1;
+	Castle.pos = Vector3f(0, 0.1, -18);
+	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+
+	Stone.model = model_stone;
+	Stone.bound_radius = 4;
+	Stone.bound_height = 2;
+	Stone.scale = 0.08;
+	Stone.pos = Vector3f(player.pos.x, 0, player.pos.z);
+	Stone.rot = Vector3f(90.0f, 0.0, 0.0);
+
+
+	
 
 	Collidable* tree;
-	// Initialize Enemies
-	enemies = LinkedList();
-	for (int i = 0; i < 3; i++) {
-		Collidable* enemy = new Collidable();
-		enemy->model = model_skeleton;
-		enemy->pos = Vector3f(5.0, 2.149, 8.0 + i);
-		enemy->rot = Vector3f(90.0, 45.0, 0);
-		enemy->scale = 0.05;
-		enemy->bound_radius = 20;
-		enemy->bound_height = 0;
-		enemies.add(enemy);
-	}
+	// Spawn at first
+
 
 	// Initialize Flow Control Variables
 	showBounds = false;
@@ -848,13 +1076,19 @@ void LoadAssets()
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_player.Load("Models/player/player.3ds");
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
+	model_coin.Load("Models/coin/coin.3ds");
+	model_stone.Load("models/rock/rock.3DS");
+
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
 	loadBMP(&day, "Textures/blu-sky-3.bmp", true);
 	loadBMP(&night, "Textures/night.bmp", true);
 }
+void Redisplay(){
 
+	glutPostRedisplay();
+}
 //=======================================================================
 // Main Function
 //=======================================================================
@@ -884,6 +1118,7 @@ void main(int argc, char** argv)
 	glutMouseFunc(myMouse);
 
 	glutSetCursor(GLUT_CURSOR_NONE);
+	glutIdleFunc(Redisplay);
 	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
 
 	glutReshapeFunc(myReshape);
