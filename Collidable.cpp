@@ -1,12 +1,20 @@
 #include "Collidable.h"
 #include <glut.h>
 
-Collidable::Collidable() {}
+Collidable::Collidable() {
+	pos = Vector3f(0.0f, 0.0f, 0.0f);
+	rot = Vector3f(0.0f, 0.0f, 0.0f);
+	momentum = Vector3f(0.0f, 0.0f, 0.0f);
+	scale = 1.0f;
+	bound_radius = 1.0;
+	bound_height = 1.0;
+}
 
-Collidable::Collidable(Model_3DS &_model, Vector3f &_pos, Vector3f &_rot, float _scale, float _bound_radius, float _bound_height) {
+Collidable::Collidable(Model_3DS &_model, Vector3f &_pos, Vector3f &_rot, Vector3f &_momentum, float _scale, float _bound_radius, float _bound_height) {
 	model = _model;
 	pos = _pos;
 	rot = _rot;
+	momentum = _momentum;
 	scale = _scale;
 	bound_radius = _bound_radius;
 	bound_height = _bound_height;
@@ -40,4 +48,8 @@ void Collidable::draw() {
 	glRotatef(rot.x, 1, 0, 0);
 	glRotatef(rot.z, 0, 0, 1);
 	model.Draw();
+}
+
+void Collidable::move() {
+	pos = pos + momentum;
 }
