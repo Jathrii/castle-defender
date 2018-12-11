@@ -36,6 +36,8 @@ char* GameOverText = "";
 bool GameOver = false;
 bool Hit = false;
 bool Level1 = true;
+bool level1ScoreCheck = true;
+bool level2ScoreCheck = true;
 
 
 
@@ -59,8 +61,6 @@ GLdouble zFar = 500;
 
 // Model Variables
 Model_3DS model_castle;
-Model_3DS model_house;
-Model_3DS model_tree;
 Model_3DS model_player;
 Model_3DS model_skeleton;
 Model_3DS model_coin;
@@ -429,199 +429,7 @@ void myDisplay(void) {
 	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
 
 
-	if (enemies.length == 0 && !GameOver) {
-
-		if ((Level1 && nightTime) || (!Level1 && !nightTime)) {
-			toggleDayCycle();
-		}
-
-		if (Level1) {
-			for (int i = 0; i < 10; i++)
-			{
-				float RandZ = (std::rand() % (20));
-				float RandX = -3.3 + (std::rand() % (7));
-				Collidable* enemy = new Collidable();
-				enemy->model = model_knight;
-				enemy->pos = Vector3f(RandX, 0.0f, RandZ);;
-				enemy->rot = Vector3f(0, 180, 0);
-				enemy->scale = 2;
-				enemy->bound_radius = 0.6;
-				enemy->bound_height = 1;
-				enemies.add(enemy);
-			}
-
-			Node* current = enemies.head;
-			while (current) {
-				cout << (current->data) << endl;
-				current = current->next;
-			}
-		}
-		else {
-
-			for (int i = 0; i < 10; i++)
-			{
-				float RandZ = (std::rand() % (20));
-				float RandX = -3.3 + (std::rand() % (7));
-				Collidable* enemy = new Collidable();
-				enemy->model = model_skeleton;
-				enemy->pos = Vector3f(RandX, 1.8f, RandZ);;
-				enemy->rot = Vector3f(90, 180, 0);
-				enemy->scale = 0.04;
-				enemy->bound_radius = 20;
-				enemy->bound_height = 0;
-				enemies.add(enemy);
-			}
-
-
-		}
-	}
-
-	// Add New collectibles 
-	if (Collectibles.length == 0) {
-		//cout << Collectibles.length << " " << "Length " << endl;
-
-		for (int i = 0; i < 10; i++) {
-			Z = -18 + (std::rand() % (36));
-			X = (std::rand() % (30)) + -10;
-			Collidable* c = new Collidable();
-			c->model = model_coin;
-			c->pos = Vector3f(X, 0.7, Z);
-			c->rot = Vector3f(90.0, 0, 0);
-			c->scale = 0.5;
-			c->bound_radius = 1;
-			c->bound_height = 0;
-			Collectibles.add(c);
-		}
-
-
-
-
-
-	}
-	//create new stone
-
-
-
-	bool HitCastle = false;
-
-	// Check if the Castle was hit
-	Node*current = enemies.head;
-	int i = 0;
-	while (current) {
-
-		HitCastle |= (Castle & *((current)->data));
-		if (HitCastle) {
-			//cout << i << " " << "Hit Castle " << endl;
-
-			enemies.remove(current->data);
-
-			if (Level1) {
-				CastleHealth += 22;
-			}
-			else {
-				CastleHealth += 27; // More Damage
-			}
-			HitCastle = false;
-
-
-
-		}
-		if (CastleHealth >= 1270) {
-			CastleHealth = 1270;
-			GameOver = true; // Either the Health of the castle is finished or All enemies die 
-			GameOverText = "Game Over and goodbye";
-		}
-		
-		current = current->next;
-	}
-	if (enemies.head == NULL) {
-		if (Level1) {
-			enemies = LinkedList();
-			Level1 = false;
-		}
-		else {
-			if (CastleHealth < 1270) {
-				GameOver = true; // The Player Won
-				GameOverText = "GoodJob Sucka!";
-			}
-		}
-	}
-	bool HitCollectible = false;
-
-	// Check if a Collectible was collected
-	current = Collectibles.head;
-
-	while (current) {
-		cout << current  << endl;
-		HitCollectible |= (player & *((current)->data));
-		if (HitCollectible) {
-			Collectibles.remove(current->data);
-			CastleHealth -= 10;
-		}
-		HitCollectible = false;
-		current = current->next;
-	}
-	if (Collectibles.head == NULL)
-	{
-		Collectibles = LinkedList();
-	}
-
-	current = Stones.head;
-	int i1 = 0;
-	int j = 0;
-	while (current) {
-
-		Node* Enemy = enemies.head;
-		Node* lastEnemy = NULL;
-		//cout << stonehit << " " << "first loop " << endl;
-		while (Enemy) {
-			cout << i1 << endl;
-			cout << j << endl;
-			cout << "abc" << endl;
-			cout << Enemy << endl;
-			//			cout << current << endl;
-			bool stonehit = (*((Enemy)->data) & *((current)->data));
-			//cout << stonehit << " " << "stone hit " << endl;
-			if (stonehit) {
-				Stones.remove(current->data);
-
-				enemies.remove(Enemy->data);
-
-				PlayerScore += 10;
-
-				if (enemies.head == NULL) {
-					if (Level1) {
-						enemies = LinkedList();
-						Level1 = false;
-					}
-					else {
-						if (CastleHealth < 1270) {
-							GameOver = true; // The Player Won
-							GameOverText = "GoodJob Sucka!";
-						}
-					}
-				}
-
-			}
-			Enemy = Enemy->next;
-			j++;
-		}
-
-		i1++;
-
-		Collidable Stone = *(current->data);
-		if (Stone.pos.x > 18 || Stone.pos.x < -18 || Stone.pos.z>20 || Stone.pos.z < -20) {
-			Stones.remove(current->data);
-		}
-		HitCollectible = false;
-
-		current = current->next;
-	}
-
-	if (Stones.head == NULL)
-	{
-		Stones = LinkedList();
-	}
+	
 
 
 
@@ -670,17 +478,6 @@ void myDisplay(void) {
 	// Draw Ground
 	RenderGround();
 
-
-
-	// Draw Tree Model
-	glPushMatrix();
-	{
-		glTranslatef(-15.0f, 0.0f, 0.0f);
-		glScalef(0.7f, 0.7f, 0.7f);
-		model_tree.Draw();
-	}
-	glPopMatrix();
-
 	//draw coin/collectiable model
 	glPushMatrix();
 	{
@@ -723,7 +520,7 @@ void myDisplay(void) {
 	glPopMatrix();
 
 	// Draw Enemy Models
-	current = enemies.head;
+	Node* current = enemies.head;
 	while (current) {
 		glPushMatrix();
 		{
@@ -733,6 +530,7 @@ void myDisplay(void) {
 
 		current = current->next;
 	}
+
 	//draw Collectibles
 	current = Collectibles.head;
 	while (current) {
@@ -745,6 +543,7 @@ void myDisplay(void) {
 
 		current = current->next;
 	}
+
 	//draw stone
 	current = Stones.head;
 	while (current) {
@@ -765,8 +564,6 @@ void myDisplay(void) {
 		{
 			player.drawBounds();
 			Stone.drawBounds();
-			//Castle.drawBounds();
-
 		}
 		glPopMatrix();
 
@@ -821,8 +618,6 @@ void myDisplay(void) {
 			current = current->next;
 		}
 
-
-
 		glColor3f(1.0, 1.0, 1.0);
 	}
 
@@ -867,7 +662,6 @@ void addStone() {
 	if (firstPerson) {
 		view = firstPersonCamera.getView();
 	}
-
 	else {
 		view = thirdPersonCamera.getView();
 	}
@@ -882,7 +676,7 @@ void addStone() {
 //=======================================================================
 // Timer Functions
 //=======================================================================
-void ShootEnemy(int extravar) {
+void moveStones() {
 	Node* current = Stones.head;
 	while (current) {
 		Collidable Stone = *(current->data);
@@ -897,18 +691,11 @@ void ShootEnemy(int extravar) {
 		current = current->next;
 	}
 
-
-
-	//glutPostRedisplay();
-
-	glutTimerFunc(1000.0 / 60.0, ShootEnemy, 0);
-
 }
 //=======================================================================
 // Move Enemy
 //=======================================================================
-void MoveEnemy(int extravar) {
-
+void moveEnemy() {
 	Node* current = enemies.head;
 	while (current) {
 		(current->data)->pos.z -= 0.01;
@@ -916,8 +703,6 @@ void MoveEnemy(int extravar) {
 
 		current = current->next;
 	}
-	glutTimerFunc(1000.0 / 60.0, MoveEnemy, 0);
-
 }
 //=======================================================================
 // Keyboard Function
@@ -1272,12 +1057,6 @@ void myInit(void)
 	Stone.rot = Vector3f(90.0f, 0.0, 0.0);
 
 
-
-
-	Collidable* tree;
-	// Spawn at first
-
-
 	// Initialize Flow Control Variables
 	showBounds = false;
 	freeView = false;
@@ -1301,8 +1080,6 @@ void myInit(void)
 	freeCamera.eye = Vector3f(20, 10, 20);
 	freeCamera.up = Vector3f(0, 1, 0);
 
-	ShootEnemy(1);
-
 	initLightSource();
 
 	initMaterial();
@@ -1319,8 +1096,6 @@ void LoadAssets()
 {
 	// Loading Model files
 	model_castle.Load("Models/castle/castle.3DS");
-	model_house.Load("Models/house/house.3DS");
-	model_tree.Load("Models/tree/Tree1.3ds");
 	model_player.Load("Models/player/player.3ds");
 	model_skeleton.Load("Models/skeleton/skeleton.3ds");
 	model_coin.Load("Models/coin/coin.3ds");
@@ -1332,7 +1107,214 @@ void LoadAssets()
 	loadBMP(&day, "Textures/blu-sky-3.bmp", true);
 	loadBMP(&night, "Textures/night.bmp", true);
 }
-void Redisplay() {
+
+void logic() {
+	if (GameOver) {
+		if (level2ScoreCheck) {
+			PlayerScore += 100 * (1270 - CastleHealth) / 270;
+			level2ScoreCheck = false;
+		}
+	}
+	else {
+		if (!Level1) {
+			if (level1ScoreCheck) {
+				PlayerScore += 100 * (1270 - CastleHealth) / 270;
+				level1ScoreCheck = false;
+			}
+		}
+		if (enemies.length == 0 && !GameOver) {
+
+			if ((Level1 && nightTime) || (!Level1 && !nightTime)) {
+				toggleDayCycle();
+			}
+
+			if (Level1) {
+				for (int i = 0; i < 10; i++)
+				{
+					float RandZ = (std::rand() % (20));
+					float RandX = -3.3 + (std::rand() % (7));
+					Collidable* enemy = new Collidable();
+					enemy->model = model_knight;
+					enemy->pos = Vector3f(RandX, 0.0f, RandZ);;
+					enemy->rot = Vector3f(0, 180, 0);
+					enemy->scale = 2;
+					enemy->bound_radius = 0.6;
+					enemy->bound_height = 1;
+					enemies.add(enemy);
+				}
+
+				Node* current = enemies.head;
+				while (current) {
+					cout << (current->data) << endl;
+					current = current->next;
+				}
+			}
+			else {
+
+				for (int i = 0; i < 10; i++)
+				{
+					float RandZ = (std::rand() % (20));
+					float RandX = -3.3 + (std::rand() % (7));
+					Collidable* enemy = new Collidable();
+					enemy->model = model_skeleton;
+					enemy->pos = Vector3f(RandX, 1.8f, RandZ);;
+					enemy->rot = Vector3f(90, 180, 0);
+					enemy->scale = 0.04;
+					enemy->bound_radius = 20;
+					enemy->bound_height = 0;
+					enemies.add(enemy);
+				}
+
+
+			}
+		}
+
+		// Add New collectibles 
+		if (Collectibles.length == 0) {
+			//cout << Collectibles.length << " " << "Length " << endl;
+
+			for (int i = 0; i < 10; i++) {
+				Z = -18 + (std::rand() % (36));
+				X = (std::rand() % (30)) + -10;
+				Collidable* c = new Collidable();
+				c->model = model_coin;
+				c->pos = Vector3f(X, 0.7, Z);
+				c->rot = Vector3f(90.0, 0, 0);
+				c->scale = 0.5;
+				c->bound_radius = 1;
+				c->bound_height = 0;
+				Collectibles.add(c);
+			}
+
+
+
+
+
+		}
+		//create new stone
+
+
+
+		bool HitCastle = false;
+
+		// Check if the Castle was hit
+		Node*current = enemies.head;
+		int i = 0;
+		while (current) {
+
+			HitCastle |= (Castle & *((current)->data));
+			if (HitCastle) {
+				//cout << i << " " << "Hit Castle " << endl;
+
+				enemies.remove(current->data);
+
+				if (Level1) {
+					CastleHealth += 22;
+				}
+				else {
+					CastleHealth += 27; // More Damage
+				}
+				HitCastle = false;
+
+
+
+			}
+			if (CastleHealth >= 1270) {
+				CastleHealth = 1270;
+				GameOver = true; // Either the Health of the castle is finished or All enemies die 
+				GameOverText = "Game Over and goodbye";
+			}
+
+			current = current->next;
+		}
+		if (enemies.head == NULL) {
+			if (Level1) {
+				enemies = LinkedList();
+				Level1 = false;
+			}
+			else {
+				if (CastleHealth < 1270) {
+					GameOver = true; // The Player Won
+					GameOverText = "GoodJob Sucka!";
+				}
+			}
+		}
+
+		bool HitCollectible = false;
+
+		// Check if a Collectible was collected
+		current = Collectibles.head;
+
+		while (current) {
+			cout << current << endl;
+			HitCollectible |= (player & *((current)->data));
+			if (HitCollectible) {
+				Collectibles.remove(current->data);
+				CastleHealth -= 10;
+			}
+			HitCollectible = false;
+			current = current->next;
+		}
+		if (Collectibles.head == NULL)
+		{
+			Collectibles = LinkedList();
+		}
+
+		current = Stones.head;
+		int i1 = 0;
+		int j = 0;
+		while (current) {
+			Node* Enemy = enemies.head;
+			Node* lastEnemy = NULL;
+			while (Enemy) {
+				bool stonehit = (*((Enemy)->data) & *((current)->data));
+
+				if (stonehit) {
+					Stones.remove(current->data);
+
+					enemies.remove(Enemy->data);
+
+					PlayerScore += 10;
+
+					if (enemies.head == NULL) {
+						if (Level1) {
+							enemies = LinkedList();
+							Level1 = false;
+						}
+						else {
+							if (CastleHealth < 1270) {
+								GameOver = true; // The Player Won
+								GameOverText = "GoodJob Sucka!";
+							}
+						}
+					}
+				}
+				Enemy = Enemy->next;
+			}
+
+			Collidable Stone = *(current->data);
+			if (Stone.pos.x > 18 || Stone.pos.x < -18 || Stone.pos.z>20 || Stone.pos.z < -20) {
+				Stones.remove(current->data);
+			}
+			HitCollectible = false;
+
+			current = current->next;
+		}
+
+		if (Stones.head == NULL)
+		{
+			Stones = LinkedList();
+		}
+
+		moveEnemy();
+	}
+	moveStones();
+}
+
+void timer(int value) {
+	glutTimerFunc(16, timer, ++value);
+
+	logic();
 
 	glutPostRedisplay();
 }
@@ -1341,8 +1323,6 @@ void Redisplay() {
 //=======================================================================
 void main(int argc, char** argv)
 {
-
-
 	srand(time(NULL));
 	glutInit(&argc, argv);
 
@@ -1369,9 +1349,9 @@ void main(int argc, char** argv)
 	glutMouseFunc(myMouse);
 
 	glutSetCursor(GLUT_CURSOR_NONE);
-	glutIdleFunc(Redisplay);
-	glutTimerFunc(100, MoveEnemy, 0);
-	//glutSetCursor(GLUT_CURSOR_CROSSHAIR);
+
+
+	glutTimerFunc(0, timer, 0);
 
 	glutReshapeFunc(myReshape);
 
