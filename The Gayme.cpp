@@ -484,6 +484,7 @@ void myDisplay(void) {
 		glPushMatrix();
 		{
 			player.drawBounds();
+			Stone.drawBounds();
 			//Castle.drawBounds();
 			
 		}
