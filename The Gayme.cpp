@@ -21,7 +21,8 @@ using namespace std;
 int WIDTH = 1280;
 int HEIGHT = 720;
 
-GLuint tex;
+GLuint day;
+GLuint night;
 
 // Camera Instance
 Camera freeCamera;
@@ -52,9 +53,11 @@ bool showBounds;
 bool freeView;
 bool firstPerson;
 
-// Light2 position
+// Lighting
 
 GLfloat lightPosition2[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+
+bool nightTime;
 
 //=======================================================================
 // Camera Setup Function
@@ -137,6 +140,12 @@ void initLightSource()
 	glLightfv(GL_LIGHT2, GL_SPECULAR, specular2);
 
 	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition2);
+
+	// Attenuation
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.9f);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.02f);
+	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 0.9f);
+	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.02f);
 }
 
 //=======================================================================
@@ -158,6 +167,17 @@ void initMaterial()
 	// Set Material's Shine value (0->128)
 	GLfloat shininess[] = { 96.0f };
 	glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
+}
+
+void toggleDayCycle() {
+	if (nightTime) {
+		nightTime = false;
+		glEnable(GL_LIGHT0);
+	}
+	else {
+		nightTime = true;
+		glDisable(GL_LIGHT0);
+	}
 }
 
 //=======================================================================
@@ -311,10 +331,11 @@ void myDisplay(void) {
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	//GLfloat lightIntensity0[] = { 0.1f, 0.1f, 0.1f, 1.0f };
+	GLfloat lightIntensity0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity0);
+
 	GLfloat lightPosition0[] = { 0.0f, 100.0f, 0.0f, 0.0f };
 	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
-	//glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity0);
 
 	GLfloat lightPosition1[] = { player.pos.x, player.pos.y, player.pos.z, 1.0f };
 
@@ -453,7 +474,10 @@ void myDisplay(void) {
 		qobj = gluNewQuadric();
 		glTranslated(50, 0, 0);
 		glRotated(90, 1, 0, 1);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		if (!nightTime)
+			glBindTexture(GL_TEXTURE_2D, day);
+		else
+			glBindTexture(GL_TEXTURE_2D, night);
 		gluQuadricTexture(qobj, true);
 		gluQuadricNormals(qobj, GL_SMOOTH);
 		gluSphere(qobj, 100, 100, 100);
@@ -476,6 +500,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 	float d = 0.1;
 
 	switch (key) {
+	case 'z':
+		toggleDayCycle();
+		break;
 	case 'w':
 		if (freeView)
 			freeCamera.moveZ(d);
@@ -821,7 +848,8 @@ void LoadAssets()
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
-	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
+	loadBMP(&day, "Textures/blu-sky-3.bmp", true);
+	loadBMP(&night, "Textures/night.bmp", true);
 }
 
 //=======================================================================
