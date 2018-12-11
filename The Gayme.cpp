@@ -161,7 +161,7 @@ void initMaterial()
 
 	// Set Material's Specular Color
 	// Will be applied to all objects
-	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specular[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
 
 	// Set Material's Shine value (0->128)
