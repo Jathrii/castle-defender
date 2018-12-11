@@ -326,16 +326,20 @@ void myDisplay(void) {
 		}
 	}
 	// Add New collectibles 
-	if (Collectibles.length <10){
-		
+	if (Collectibles.length == 0){
+		for (int i = 0; i < 10; i++){
+			Z = -18 + (std::rand() % (36));
+			X = (std::rand() % (30)) + -10;
 			Collidable* c = new Collidable();
 			c->model = model_coin;
+			cout << Z << " " << "Z position " << endl;
 			c->pos = Vector3f(X, 0.7, Z);
 			c->rot = Vector3f(90.0, 0, 0);
 			c->scale = 0.5;
 			c->bound_radius = 1;
 			c->bound_height = 0;
 			Collectibles.add(c);
+		}
 		
 		
 
@@ -757,7 +761,7 @@ void myInit(void)
 	Castle.model = model_house;
 	Castle.bound_radius = 4;
 	Castle.bound_height = 2;
-	Castle.scale = 0;
+	Castle.scale = 1;
 	Castle.pos = Vector3f(0, 0.1, -18);
 	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
 
@@ -806,8 +810,7 @@ void LoadAssets()
 	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
 }
 void Redisplay(){
-	Z = -18+(std::rand() % (36));
-	X= (std::rand() % (30)) + -10;
+
 	glutPostRedisplay();
 }
 //=======================================================================
