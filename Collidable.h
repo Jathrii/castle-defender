@@ -12,6 +12,7 @@ public:
 	// Transformations
 	Vector3f pos;
 	Vector3f rot;
+	Vector3f momentum;
 	float scale;
 
 	// Bounds
@@ -20,13 +21,15 @@ public:
 
 	Collidable();
 
-	Collidable(Model_3DS &_model, Vector3f &_pos, Vector3f &_rot, float _scale, float _bound_radius, float _bound_height);
+	Collidable(Model_3DS &_model, Vector3f &_pos, Vector3f &_rot, Vector3f &_momentum, float _scale, float _bound_radius, float _bound_height);
 
 	bool operator&(Collidable &c);
 
 	void drawBounds();
 
 	void draw();
+
+	void move();
 };
 
 #endif COLLIDABLE_H

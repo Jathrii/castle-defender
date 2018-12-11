@@ -569,6 +569,9 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveY(d);
 		break;
+	case '\\':
+		firstPerson = !firstPerson;
+		break;
 	case '\/':
 		if (!freeView) {
 			if (firstPerson) {
