@@ -437,8 +437,10 @@ void myDisplay(void) {
 		}
 	
 	// Add New collectibles 
-	if (Collectibles.length == 0){
-		for (int i = 0; i < 10; i++){
+	if (Collectibles.length==0){
+		cout << Collectibles.length << " " << "Length " << endl;
+
+		for (int i =0; i < 10; i++){
 			Z = -18 + (std::rand() % (36));
 			X = (std::rand() % (30)) + -10;
 			Collidable* c = new Collidable();
@@ -465,26 +467,19 @@ void myDisplay(void) {
 	Node* previous = NULL;
 	int i = 0;
 	while (current) {
-		i++;
 
 		HitCastle |= (Castle & *((current)->data));
 		if (HitCastle) {
 			cout << i << " " << "Hit Castle " << endl;
 
-			if (enemies.length ==1)
-			{
 
-				enemies =  LinkedList();
-				Level1 = false; // Remember do to the same with Killing them 
-			}
-			else{
 				if (current == enemies.head){
 					enemies.head = current->next;
 				}
 				else{
 					previous->next = current->next;
 				}
-			}
+			
 
 			CastleHealth += 10;
 			HitCastle = false;
@@ -510,15 +505,16 @@ void myDisplay(void) {
 	while (current) {
 		HitCollectible |= (player & *((current)->data));
 		if (HitCollectible) {
-			if (current == Collectibles.head)
-			{
-				Collectibles =  LinkedList();
-			}
-			else{
-				previous->next = current->next;
+
+			
+				if (current == Collectibles.head){
+					Collectibles.head = current->next;
+				}
+				else{
+					previous->next = current->next;
+				
 			}
 			
-			//cout << collision << " " << "Some Collectible was collected" << endl;
 			CastleHealth -= 10;
 
 		}
@@ -526,6 +522,14 @@ void myDisplay(void) {
 		previous = current;
 		current = current->next;
 	}
+	if (Collectibles.head == NULL)
+
+	{
+
+		Collectibles =  LinkedList();
+	}
+		
+
 
 
 
