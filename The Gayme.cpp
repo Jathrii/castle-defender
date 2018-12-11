@@ -813,7 +813,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 			freeCamera.moveZ(d);
 		else {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 			}
 			Vector3f view;
 			if (firstPerson)
@@ -833,7 +833,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 			freeCamera.moveZ(-d);
 		if (!freeView) {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 			}
 
 			Vector3f view;
@@ -854,7 +854,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 			freeCamera.moveX(d);
 		else {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 			}
 			Vector3f right;
 			if (firstPerson)
@@ -874,7 +874,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 			freeCamera.moveX(-d);
 		else {
 			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play3D("./sounds/footstep.wav", vec3df(0, 0, 0), true, false, true);
+				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 			}
 			Vector3f right;
 			if (firstPerson)
