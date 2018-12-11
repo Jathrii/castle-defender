@@ -31,7 +31,8 @@ float RandomEnemyX;
 float RandomEnemyY;
 int CurrentEnemyNumber = 1;
 int EnemySize = 0;
-char* GameOver = "";
+char* GameOverText = "";
+bool GameOver = false;
 bool Hit = false;
 bool Level1 = true;
 GLuint tex;
@@ -365,7 +366,7 @@ void drawCrosshairs() {
 	sprintf((char *)p0s, "Your Score = %d ", PlayerScore);
 	print(10, 30, (char *)p0s);
 
-	print(500, 30, GameOver);
+	print(500, 30, GameOverText);
 	UpdateCastleHealth();
 
 	glPopMatrix();
@@ -399,7 +400,7 @@ void myDisplay(void) {
 
 
 
-	if (enemies.length == 0){
+	if (enemies.length == 0 &&!GameOver){
 
 		if (Level1){
 			for (int i = 0; i < 10; i++)
@@ -419,11 +420,13 @@ void myDisplay(void) {
 		else{
 			for (int i = 0; i < 10; i++)
 			{
+				float RandZ = (std::rand() % (20));
+				float RandX = -3.3 + (std::rand() % (7));
 				Collidable* enemy = new Collidable();
 				enemy->model = model_skeleton;
-				enemy->pos = Vector3f(0.0f, 1.8f, 0.0f);;
+				enemy->pos = Vector3f(RandX, 1.8f, RandZ);;
 				enemy->rot = Vector3f(90, 180, 0);
-				enemy->scale = 0.05;
+				enemy->scale = 0.04;
 				enemy->bound_radius = 20;
 				enemy->bound_height = 0;
 				enemies.add(enemy);
@@ -460,32 +463,44 @@ void myDisplay(void) {
 	// Check if the Castle was hit
 	Node*current =enemies.head;
 	Node* previous = NULL;
-
+	int i = 0;
 	while (current) {
+		i++;
+
 		HitCastle |= (Castle & *((current)->data));
 		if (HitCastle) {
-			if (current == enemies.head)
+			cout << i << " " << "Hit Castle " << endl;
+
+			if (enemies.length ==1)
 			{
-				enemies = LinkedList(); 
+
+				enemies =  LinkedList();
 				Level1 = false; // Remember do to the same with Killing them 
 			}
 			else{
-				previous->next = current->next;
+				if (current == enemies.head){
+					enemies.head = current->next;
+				}
+				else{
+					previous->next = current->next;
+				}
 			}
 
-			//cout << collision << " " << "Some Collectible was collected" << endl;
 			CastleHealth += 10;
+			HitCastle = false;
+
 		
 
 		}
 		if (CastleHealth >= 1270){
 			CastleHealth = 1270;
-			GameOver = "Goodbye and Goodnight";
+			GameOver = true; // Either the Health of the castle is finished or All enemies die 
+			GameOverText = "Game Over and goodbye";
 		}
-		HitCastle = false;
 		previous = current;
 		current = current->next;
 	}
+	i = 0;
 	bool HitCollectible = false;
 
 	// Check if a Collectible was collected
@@ -711,7 +726,7 @@ void myDisplay(void) {
 
 	glutSwapBuffers();
 
-	glutPostRedisplay();
+	//glutPostRedisplay();
 }
 //=======================================================================
 // Timer Functions
@@ -741,7 +756,7 @@ void MoveEnemy(int extravar) {
 	
 	Node* current = enemies.head;
 	while (current) {
-		(current->data)->pos.z -= 0.01;
+		(current->data)->pos.z -= 0.05;
 
 
 		current = current->next;
