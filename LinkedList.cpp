@@ -30,16 +30,13 @@ void LinkedList::remove(Collidable* data) {
 		if (current->data == data) {
 			if (i == 0) {
 				head = current->next;
-				delete current;
 			}
 			else if (i == length - 1) {
 				prev->next = NULL;
 				tail = prev;
-				delete current;
 			}
 			else {
 				prev->next = current->next;
-				delete current;
 			}
 
 			length--;
