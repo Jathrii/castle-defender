@@ -51,6 +51,7 @@ GLdouble zNear = 0.05;
 GLdouble zFar = 500;
 
 // Model Variables
+Model_3DS model_castle;
 Model_3DS model_house;
 Model_3DS model_tree;
 Model_3DS model_player;
@@ -623,7 +624,7 @@ void myDisplay(void) {
 	//draw stone
 	glPushMatrix();
 	{
-		glTranslatef(0.0f, 6.0f, 0.0f);
+		//glTranslatef(0.0f, 6.0f, 0.0f);
 		//glScalef(2.8f, 2.8f, 2.8f);
 		Stone.draw();
 		
@@ -1104,13 +1105,13 @@ void myInit(void)
 	player.bound_height = 80;
 
 	//Initialize Castle bounds
-
-	Castle.model = model_house;
-	Castle.bound_radius = 4;
-	Castle.bound_height = 2;
-	Castle.scale = 1;
-	Castle.pos = Vector3f(0, 0.1, -18);
-	Castle.rot = Vector3f(90.0f,  0.0, 0.0);
+	Castle.model = model_castle;
+	//Castle.model = model_house;
+	Castle.bound_radius = 70;
+	Castle.bound_height = -10;
+	Castle.scale = 0.1;
+	Castle.pos = Vector3f(0, 0.0, -16);
+	Castle.rot = Vector3f(0.0f,  90.0f, 0.0f);
 
 	Stone.model = model_stone;
 	Stone.bound_radius = 4;
@@ -1164,6 +1165,7 @@ void myInit(void)
 void LoadAssets()
 {
 	// Loading Model files
+	model_castle.Load("Models/castle/castle.3DS");
 	model_house.Load("Models/house/house.3DS");
 	model_tree.Load("Models/tree/Tree1.3ds");
 	model_player.Load("Models/player/player.3ds");
