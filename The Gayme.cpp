@@ -11,10 +11,11 @@
 #include <iostream>
 #include <ctime>
 #include <time.h>
+#include <irrKlang.h>
 using namespace std;
+using namespace irrklang;
+#pragma comment(lib, "irrKlang.lib") // link with irrKlang.dll
 
-
-using namespace std;
 
 #define DEG2RAD(a) (a * 0.0174532925)
 #define RAD2DEG(r) (r * 57.29577951)
@@ -40,6 +41,8 @@ bool Level1 = true;
 
 
 GLuint tex;
+
+
 
 GLuint day;
 GLuint night;
@@ -81,11 +84,16 @@ bool showBounds;
 bool freeView;
 bool firstPerson;
 
+// IrrKlang init
+ISoundEngine* engine = createIrrKlangDevice();
+ISound *footsteps;
+
 // Lighting
 
 GLfloat lightPosition2[] = { 0.0f, 10.0f, 0.0f, 1.0f };
 
 bool nightTime;
+
 
 //=======================================================================
 // Camera Setup Function
@@ -925,6 +933,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(d);
 		else {
+			footsteps->setIsPaused(false);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -942,6 +951,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(-d);
 		if (!freeView) {
+			footsteps->setIsPaused(false);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -959,6 +969,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(d);
 		else {
+			footsteps->setIsPaused(false);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -976,6 +987,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(-d);
 		else {
+			footsteps->setIsPaused(false);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -1028,6 +1040,26 @@ void myKeyboard(unsigned char key, int x, int y) {
 
 	//glutPostRedisplay();
 }
+
+void myKeyboardUp(unsigned char key, int x, int y) {
+	switch (key) {
+	case 'w':
+		footsteps->setIsPaused(true);
+		break;
+	case 's':
+		footsteps->setIsPaused(true);
+		break;
+	case 'a':
+		footsteps->setIsPaused(true);
+		break;
+	case 'd':
+		footsteps->setIsPaused(true);
+		break;
+	}
+
+}
+
+
 
 //=======================================================================
 // Special Key Function
@@ -1309,6 +1341,8 @@ void Redisplay() {
 //=======================================================================
 void main(int argc, char** argv)
 {
+
+
 	srand(time(NULL));
 	glutInit(&argc, argv);
 
@@ -1323,6 +1357,8 @@ void main(int argc, char** argv)
 	glutDisplayFunc(myDisplay);
 
 	glutKeyboardFunc(myKeyboard);
+
+	glutKeyboardUpFunc(myKeyboardUp);
 
 	glutSpecialFunc(mySpecial);
 
@@ -1351,6 +1387,9 @@ void main(int argc, char** argv)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glShadeModel(GL_SMOOTH);
+	footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
+	footsteps->setIsPaused(true);
+
 
 	glutMainLoop();
 }
