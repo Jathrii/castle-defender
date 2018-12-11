@@ -87,6 +87,7 @@ bool firstPerson;
 // IrrKlang init
 ISoundEngine* engine = createIrrKlangDevice();
 ISound *footsteps;
+ISound *castleFall;
 
 // Lighting
 
@@ -521,6 +522,8 @@ void myDisplay(void) {
 			else {
 				CastleHealth += 27; // More Damage
 			}
+
+			engine->play2D("./sounds/castleHit.wav");
 			HitCastle = false;
 
 
@@ -528,6 +531,7 @@ void myDisplay(void) {
 		}
 		if (CastleHealth >= 1270) {
 			CastleHealth = 1270;
+			castleFall->setIsPaused(false);
 			GameOver = true; // Either the Health of the castle is finished or All enemies die 
 			GameOverText = "Game Over and goodbye";
 		}
@@ -588,6 +592,7 @@ void myDisplay(void) {
 				enemies.remove(Enemy->data);
 
 				PlayerScore += 10;
+				engine->play2D("./sounds/hit.wav");
 
 				if (enemies.head == NULL) {
 					if (Level1) {
@@ -877,6 +882,7 @@ void addStone() {
 	c->bound_radius = 1;
 	c->bound_height = 0;
 	Stones.add(c);
+	engine->play2D("./sounds/throw.wav");
 }
 
 //=======================================================================
@@ -1389,6 +1395,9 @@ void main(int argc, char** argv)
 	glShadeModel(GL_SMOOTH);
 	footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 	footsteps->setIsPaused(true);
+
+	castleFall = engine->play2D("./sounds/castleFall.wav", false, false, false, ESM_AUTO_DETECT, true);
+	castleFall->setIsPaused(true);
 
 
 	glutMainLoop();
