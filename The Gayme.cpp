@@ -87,6 +87,7 @@ bool firstPerson;
 // IrrKlang init
 ISoundEngine* engine = createIrrKlangDevice();
 ISound *footsteps;
+ISound *castleFall;
 
 // Lighting
 
@@ -406,6 +407,7 @@ void randomizeLight2() {
 	GLfloat ambient2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
 	GLfloat diffuse2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
 	GLfloat specular2[] = { ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), ((double)rand() / (RAND_MAX)), 1.0f };
+	//printf("%f\n", ambient2[0]);
 	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
 
 	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
@@ -617,6 +619,7 @@ void myDisplay(void) {
 }
 
 void addStone() {
+	engine->play2D("./sounds/throw.wav");
 	cout << PlayerScore << " " << "Player is Hitting " << endl;
 	//Hit = true;
 	Collidable* c = new Collidable();
@@ -1123,7 +1126,7 @@ void logic() {
 
 				Node* current = enemies.head;
 				while (current) {
-					cout << (current->data) << endl;
+					//cout << (current->data) << endl;
 					current = current->next;
 				}
 			}
@@ -1186,6 +1189,7 @@ void logic() {
 
 				enemies.remove(current->data);
 
+				engine->play2D("./sounds/castleHit.wav");
 				if (Level1) {
 					CastleHealth += 22;
 				}
@@ -1198,6 +1202,7 @@ void logic() {
 
 			}
 			if (CastleHealth >= 1270) {
+				castleFall->setIsPaused(false);
 				CastleHealth = 1270;
 				GameOver = true; // Either the Health of the castle is finished or All enemies die 
 				GameOverText = "Game Over and goodbye";
@@ -1213,6 +1218,7 @@ void logic() {
 			else {
 				if (CastleHealth < 1270) {
 					GameOver = true; // The Player Won
+					glEnable(GL_LIGHT2);
 					GameOverText = "GoodJob Sucka!";
 				}
 			}
@@ -1224,7 +1230,7 @@ void logic() {
 		current = Collectibles.head;
 
 		while (current) {
-			cout << current << endl;
+			//cout << current << endl;
 			HitCollectible |= (player & *((current)->data));
 			if (HitCollectible) {
 				Collectibles.remove(current->data);
@@ -1254,6 +1260,8 @@ void logic() {
 
 					PlayerScore += 10;
 
+					engine->play2D("./sounds/hit.wav");
+
 					if (enemies.head == NULL) {
 						if (Level1) {
 							enemies = LinkedList();
@@ -1262,6 +1270,7 @@ void logic() {
 						else {
 							if (CastleHealth < 1270) {
 								GameOver = true; // The Player Won
+								glEnable(GL_LIGHT2);
 								GameOverText = "GoodJob Sucka!";
 							}
 						}
@@ -1347,6 +1356,9 @@ void main(int argc, char** argv)
 	glShadeModel(GL_SMOOTH);
 	footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
 	footsteps->setIsPaused(true);
+
+	castleFall = engine->play2D("./sounds/castleFall.wav", false, false, false, ESM_AUTO_DETECT, true);
+	castleFall->setIsPaused(true);
 
 
 	glutMainLoop();
