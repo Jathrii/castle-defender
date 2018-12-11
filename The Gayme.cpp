@@ -812,9 +812,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(d);
 		else {
-			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
-			}
+			footsteps->setIsPaused(false);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -832,10 +830,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveZ(-d);
 		if (!freeView) {
-			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
-			}
-
+			footsteps->setIsPaused(false);
 			Vector3f view;
 			if (firstPerson)
 				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -853,9 +848,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(d);
 		else {
-			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
-			}
+			footsteps->setIsPaused(false);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -873,9 +866,7 @@ void myKeyboard(unsigned char key, int x, int y) {
 		if (freeView)
 			freeCamera.moveX(-d);
 		else {
-			if (!engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-				footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
-			}
+			footsteps->setIsPaused(false);
 			Vector3f right;
 			if (firstPerson)
 				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
@@ -933,28 +924,16 @@ void myKeyboard(unsigned char key, int x, int y) {
 void myKeyboardUp(unsigned char key, int x, int y) {
 	switch (key) {
 	case 'w':
-		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-			footsteps->stop();
-			footsteps->drop();
-		}
+		footsteps->setIsPaused(true);
 		break;
 	case 's':
-		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-			footsteps->stop();
-			footsteps->drop();
-		}
+		footsteps->setIsPaused(true);
 		break;
 	case 'a':
-		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-			footsteps->stop();
-			footsteps->drop();
-		}
+		footsteps->setIsPaused(true);
 		break;
 	case 'd':
-		if (engine->isCurrentlyPlaying("./sounds/footstep.wav")) {
-			footsteps->stop();
-			footsteps->drop();
-		}
+		footsteps->setIsPaused(true);
 		break;
 	}
 
@@ -1287,6 +1266,9 @@ void main(int argc, char** argv)
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glShadeModel(GL_SMOOTH);
+	footsteps = engine->play2D("./sounds/footstep.wav", true, false, false, ESM_AUTO_DETECT, true);
+	footsteps->setIsPaused(true);
+
 
 	glutMainLoop();
 }
