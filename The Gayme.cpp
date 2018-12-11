@@ -601,6 +601,7 @@ void myDisplay(void) {
 					}
 					else {
 						if (CastleHealth < 1270) {
+							glEnable(GL_LIGHT2);
 							GameOver = true; // The Player Won
 							GameOverText = "GoodJob Sucka!";
 						}
