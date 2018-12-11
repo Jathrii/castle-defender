@@ -21,6 +21,8 @@ public:
 
 	void rotateY(float a);
 
+	void rotateAroundY(float a, Vector3f rotCenter);
+
 	void look();
 };
 

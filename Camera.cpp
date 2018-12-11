@@ -57,6 +57,15 @@ void Camera::rotateY(float a) {
 	center = eye + view;
 }
 
+void Camera::rotateAroundY(float a, Vector3f rotCenter) {
+	center = center - rotCenter;
+	eye = eye - rotCenter;
+	center = center.rotateY(a);
+	eye = eye.rotateY(a);
+	center = center + rotCenter;
+	eye = eye + rotCenter;
+}
+
 void Camera::look() {
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();

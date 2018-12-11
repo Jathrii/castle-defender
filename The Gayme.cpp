@@ -13,6 +13,11 @@
 #include <time.h>
 using namespace std;
 
+
+using namespace std;
+
+#define DEG2RAD(a) (a * 0.0174532925)
+#define RAD2DEG(r) (r * 57.29577951)
 #define ESCAPE 27
 #define SPACEBAR 32
 
@@ -30,8 +35,12 @@ char* GameOver = "";
 bool Hit = false;
 GLuint tex;
 
+GLuint day;
+GLuint night;
 // Camera Instance
-Camera camera;
+Camera freeCamera;
+Camera firstPersonCamera;
+Camera thirdPersonCamera;
 
 // 3D Projection Options
 GLdouble fovy = 45.0;
@@ -59,6 +68,14 @@ GLTexture tex_ground;
 
 // Flow Control Variables
 bool showBounds;
+bool freeView;
+bool firstPerson;
+
+// Lighting
+
+GLfloat lightPosition2[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+
+bool nightTime;
 
 //=======================================================================
 // Camera Setup Function
@@ -70,7 +87,14 @@ void setupCamera() {
 
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	camera.look();
+	if (freeView)
+		freeCamera.look();
+	else {
+		if (firstPerson)
+			firstPersonCamera.look();
+		else
+			thirdPersonCamera.look();
+}
 }
 
 //=======================================================================
@@ -83,23 +107,63 @@ void initLightSource()
 
 	// Enable Light Source number 0
 	// OpengL has 8 light sources
+	// Skylight
 	glEnable(GL_LIGHT0);
 
 	// Define Light source 0 ambient light
-	GLfloat ambient[] = { 0.1f, 0.1f, 0.1, 1.0f };
-	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient);
+	GLfloat ambient0[] = { 0.02f, 0.02f, 0.02f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, ambient0);
 
 	// Define Light source 0 diffuse light
-	GLfloat diffuse[] = { 0.5f, 0.5f, 0.5f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse);
+	GLfloat diffuse0[] = { 0.5f, 0.5f, 0.5f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_DIFFUSE, diffuse0);
 
 	// Define Light source 0 Specular light
-	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_SPECULAR, specular);
+	GLfloat specular0[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_SPECULAR, specular0);
 
 	// Finally, define light source 0 position in World Space
-	GLfloat light_position[] = { 0.0f, 10.0f, 0.0f, 1.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, light_position);
+	GLfloat lightPosition0[] = { 0.0f, 10.0f, 0.0f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
+
+
+	// Repeat for light 1: Lantern
+	glEnable(GL_LIGHT1);
+
+	GLfloat ambient1[] = { 0.0878f, 0.0616f, 0.0216f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_AMBIENT, ambient1);
+
+	GLfloat diffuse1[] = { 0.878f, 0.616f, 0.216f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_DIFFUSE, diffuse1);
+
+	GLfloat specular1[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_SPECULAR, specular1);
+
+	GLfloat lightPosition1[] = { 0.0f, 0.0f, 0.0f, 1.0f };
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
+
+	// Light2 variables
+
+	GLfloat ambient2[] = { 0.0878f, 0.0616f, 0.0216f, 1.0f };
+	GLfloat diffuse2[] = { 0.878f, 0.616f, 0.216f, 1.0f };
+	GLfloat specular2[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+
+	// Repeat for light 2: Disco ball
+	//glEnable(GL_LIGHT2);
+
+	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
+
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
+
+	glLightfv(GL_LIGHT2, GL_SPECULAR, specular2);
+
+	glLightfv(GL_LIGHT2, GL_POSITION, lightPosition2);
+
+	// Attenuation
+	glLightf(GL_LIGHT0, GL_CONSTANT_ATTENUATION, 0.9f);
+	glLightf(GL_LIGHT0, GL_QUADRATIC_ATTENUATION, 0.02f);
+	glLightf(GL_LIGHT1, GL_CONSTANT_ATTENUATION, 0.9f);
+	glLightf(GL_LIGHT1, GL_QUADRATIC_ATTENUATION, 0.02f);
 }
 
 //=======================================================================
@@ -115,7 +179,7 @@ void initMaterial()
 
 	// Set Material's Specular Color
 	// Will be applied to all objects
-	GLfloat specular[] = { 1.0f, 1.0f, 1.0f, 1.0f };
+	GLfloat specular[] = { 0.2f, 0.2f, 0.2f, 1.0f };
 	glMaterialfv(GL_FRONT, GL_SPECULAR, specular);
 
 	// Set Material's Shine value (0->128)
@@ -123,12 +187,22 @@ void initMaterial()
 	glMaterialfv(GL_FRONT, GL_SHININESS, shininess);
 }
 
+void toggleDayCycle() {
+	if (nightTime) {
+		nightTime = false;
+		glEnable(GL_LIGHT0);
+	}
+	else {
+		nightTime = true;
+		glDisable(GL_LIGHT0);
+	}
+}
+
 //=======================================================================
 // Render Ground Function
 //=======================================================================
 void RenderGround()
 {
-	glDisable(GL_LIGHTING);	// Disable lighting 
 
 	glColor3f(0.6, 0.6, 0.6);	// Dim the ground texture a bit
 
@@ -154,7 +228,6 @@ void RenderGround()
 	}
 	glPopMatrix();
 
-	glEnable(GL_LIGHTING);	// Enable lighting again for other entites coming throung the pipeline.
 
 	glColor3f(1, 1, 1);	// Set material back to white instead of grey used for the ground texture.
 }
@@ -295,19 +368,38 @@ void drawCrosshairs() {
 	glPopMatrix();
 }
 
+void randomizeLight2() {
+	GLfloat ambient2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	GLfloat diffuse2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	GLfloat specular2[] = { ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), ((double) rand() / (RAND_MAX)), 1.0f };
+	glLightfv(GL_LIGHT2, GL_AMBIENT, ambient2);
+
+	glLightfv(GL_LIGHT2, GL_DIFFUSE, diffuse2);
+
+	glLightfv(GL_LIGHT2, GL_SPECULAR, specular2);
+
+}
+
 //=======================================================================
 // Display Function
 //=======================================================================
 
 void myDisplay(void) {
+	randomizeLight2();
 	setupCamera();
 
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-	GLfloat lightIntensity[] = { 0.7f, 0.7f, 0.7f, 1.0f };
-	GLfloat lightPosition[] = { 0.0f, 100.0f, 0.0f, 0.0f };
-	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition);
-	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity);
+	GLfloat lightIntensity0[] = { 0.6f, 0.6f, 0.6f, 1.0f };
+	glLightfv(GL_LIGHT0, GL_AMBIENT, lightIntensity0);
+
+	GLfloat lightPosition0[] = { 0.0f, 100.0f, 0.0f, 0.0f };
+	glLightfv(GL_LIGHT0, GL_POSITION, lightPosition0);
+
+	GLfloat lightPosition1[] = { player.pos.x, player.pos.y, player.pos.z, 1.0f };
+
+	glLightfv(GL_LIGHT1, GL_POSITION, lightPosition1);
+
 
 
 	if (enemies.length == 0){
@@ -400,6 +492,41 @@ void myDisplay(void) {
 
 	// Draw Axes
 	axes(30);
+	
+	// Draw Camera Eye & Center
+	/*
+	// Eye
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glPushMatrix();
+	{
+		glTranslatef(firstPersonCamera.eye.x, firstPersonCamera.eye.y, firstPersonCamera.eye.z);
+		glutSolidSphere(0.3, 10, 10);
+	}
+	glPopMatrix();
+	glPushMatrix();
+	{
+		glTranslatef(thirdPersonCamera.eye.x, thirdPersonCamera.eye.y, thirdPersonCamera.eye.z);
+		glutSolidSphere(0.3, 10, 10);
+	}
+	glPopMatrix();
+
+	// Center
+	glColor3f(1.0f, 0.0f, 0.0f);
+	glPushMatrix();
+	{
+		glTranslatef(firstPersonCamera.center.x, firstPersonCamera.center.y, firstPersonCamera.center.z);
+		glutSolidSphere(0.3, 10, 10);
+	}
+	glPopMatrix();
+	glPushMatrix();
+	{
+		glTranslatef(thirdPersonCamera.center.x, thirdPersonCamera.center.y, thirdPersonCamera.center.z);
+		glutSolidSphere(0.3, 10, 10);
+	}
+	glPopMatrix();
+
+	glColor3f(1.0f, 1.0f, 1.0f);
+	*/
 
 	// Draw Ground
 	RenderGround();
@@ -449,6 +576,7 @@ void myDisplay(void) {
 	// Draw Player Model
 	glPushMatrix();
 	{
+		if (!firstPerson || freeView)
 		player.draw();
 	}
 	glPopMatrix();
@@ -538,7 +666,10 @@ void myDisplay(void) {
 		qobj = gluNewQuadric();
 		glTranslated(50, 0, 0);
 		glRotated(90, 1, 0, 1);
-		glBindTexture(GL_TEXTURE_2D, tex);
+		if (!nightTime)
+			glBindTexture(GL_TEXTURE_2D, day);
+		else
+			glBindTexture(GL_TEXTURE_2D, night);
 		gluQuadricTexture(qobj, true);
 		gluQuadricNormals(qobj, GL_SMOOTH);
 		gluSphere(qobj, 100, 100, 100);
@@ -550,6 +681,8 @@ void myDisplay(void) {
 	drawCrosshairs();
 
 	glutSwapBuffers();
+
+	glutPostRedisplay();
 }
 //=======================================================================
 // Timer Functions
@@ -579,23 +712,87 @@ void myKeyboard(unsigned char key, int x, int y) {
 	float d = 0.1;
 
 	switch (key) {
+	case 'z':
+		toggleDayCycle();
+		break;
 	case 'w':
-		camera.moveZ(d);
+		if (freeView)
+			freeCamera.moveZ(d);
+		else {
+			firstPersonCamera.moveZ(d);
+			thirdPersonCamera.moveZ(d);
+			Vector3f view;
+			if (firstPerson)
+				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
+			else
+				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
+			player.pos.x += view.x * d;
+			player.pos.z += view.z * d;
+		}
 		break;
 	case 's':
-		camera.moveZ(-d);
+		if (freeView)
+			freeCamera.moveZ(-d);
+		if (!freeView) {
+			firstPersonCamera.moveZ(-d);
+			thirdPersonCamera.moveZ(-d);
+			Vector3f view;
+			if (firstPerson)
+				view = (firstPersonCamera.center - firstPersonCamera.eye).unit();
+			else
+				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
+			player.pos.x += view.x * -d;
+			player.pos.z += view.z * -d;
+		}
 		break;
 	case 'a':
-		camera.moveX(d);
+		if (freeView)
+			freeCamera.moveX(d);
+		else {
+			firstPersonCamera.moveX(d);
+			thirdPersonCamera.moveX(d);
+			Vector3f right;
+			if (firstPerson)
+				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
+			else
+				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
+			player.pos = player.pos + right * d;
+		}
 		break;
 	case 'd':
-		camera.moveX(-d);
+		if (freeView)
+			freeCamera.moveX(-d);
+		else {
+			firstPersonCamera.moveX(-d);
+			thirdPersonCamera.moveX(-d);
+			Vector3f right;
+			if (firstPerson)
+				right = firstPersonCamera.up.cross(firstPersonCamera.center - firstPersonCamera.eye).unit();
+			else
+				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
+			player.pos = player.pos + right * -d;
+		}
 		break;
 	case 'q':
-		camera.moveY(-d);
+		if (freeView)
+			freeCamera.moveY(-d);
 		break;
 	case 'e':
-		camera.moveY(d);
+		if (freeView)
+			freeCamera.moveY(d);
+		break;
+	case '\/':
+		if (!freeView) {
+			if (firstPerson) {
+				freeCamera.eye = firstPersonCamera.eye;
+				freeCamera.center = firstPersonCamera.center;
+			}
+			else {
+				freeCamera.eye = thirdPersonCamera.eye;
+				freeCamera.center = thirdPersonCamera.center;
+			}
+		}
+		freeView = !freeView;
 		break;
 	case 'h':
 		//cout << PlayerScore << " " << "Player is Hitting " << endl;
@@ -621,16 +818,16 @@ void mySpecial(int key, int x, int y) {
 
 	switch (key) {
 	case GLUT_KEY_UP:
-		player.pos.z = player.pos.z - 0.1f;
+		;
 		break;
 	case GLUT_KEY_DOWN:
-		player.pos.z = player.pos.z + 0.1f;
+		;
 		break;
 	case GLUT_KEY_LEFT:
-		player.pos.x = player.pos.x - 0.1f;
+		;
 		break;
 	case GLUT_KEY_RIGHT:
-		player.pos.x = player.pos.x + 0.1f;
+		;
 		break;
 	}
 
@@ -644,8 +841,7 @@ bool just_warped = false;
 //=======================================================================
 // Motion Functions
 //=======================================================================
-void myPassiveMotion(int x, int y)
-{
+void myPassiveMotion(int x, int y) {
 	if (just_warped) {
 		just_warped = false;
 		return;
@@ -656,8 +852,48 @@ void myPassiveMotion(int x, int y)
 	int diffx = x - WIDTH / 2;
 	int diffy = y - HEIGHT / 2;
 
-	camera.rotateX(diffy);
-	camera.rotateY(-diffx * 0.5);
+	if (freeView) {
+		freeCamera.rotateX(diffy);
+		freeCamera.rotateY(-diffx * 0.5);
+		/*
+		freeCamera.center.y += diffy * 0.01;
+		if (freeCamera.center.y < 0)
+			freeCamera.center.y = 0;
+		else if (freeCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			freeCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+
+		Vector3f rotationCenter = player.pos + Vector3f(0, player.bound_height * player.scale * 1.5 + 1, 0);
+		float camera_speed = 0.5;
+		freeCamera.rotateAroundY(-diffx * camera_speed, (freeCamera.eye + freeCamera.center) / 2);
+		*/
+	}
+	else {
+		firstPersonCamera.center.y += diffy * 0.01;
+		thirdPersonCamera.center.y += diffy * 0.01;
+
+		if (firstPersonCamera.center.y < 0)
+			firstPersonCamera.center.y = 0;
+		else if (firstPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			firstPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+		if (thirdPersonCamera.center.y < 0)
+			thirdPersonCamera.center.y = 0;
+		else if (thirdPersonCamera.center.y > 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1))
+			thirdPersonCamera.center.y = 2 * (player.pos.y + player.bound_height * player.scale * 1.5 + 1);
+
+		float camera_speed = 0.5;
+
+		Vector3f rotationCenter = player.pos + Vector3f(0, player.bound_height * player.scale * 1.5 + 1, 0);
+		firstPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
+		thirdPersonCamera.rotateAroundY(-diffx * camera_speed, rotationCenter);
+
+		float angle;
+		if (firstPerson)
+			angle = RAD2DEG(atan2(firstPersonCamera.center.z - firstPersonCamera.eye.z, firstPersonCamera.center.x - firstPersonCamera.eye.x));
+		else
+			angle = RAD2DEG(atan2(thirdPersonCamera.center.z - thirdPersonCamera.eye.z, thirdPersonCamera.center.x - thirdPersonCamera.eye.x));
+		player.rot.y = 90 - angle;
+	}
+
 
 	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
 	just_warped = true;
@@ -665,8 +901,7 @@ void myPassiveMotion(int x, int y)
 	//glutPostRedisplay();	//Re-draw scene 
 }
 
-void myMotion(int x, int y)
-{
+void myMotion(int x, int y) {
 	myPassiveMotion(x, y);
 }
 
@@ -681,8 +916,23 @@ void myMouse(int button, int state, int x, int y)
 		;
 	if (button == GLUT_LEFT_BUTTON && state == GLUT_UP)
 		;
-	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN)
-		;
+	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_DOWN) {
+		/*
+		if (firstPerson) {
+			firstPersonEye = camera.eye;
+			firstPersonCenter = camera.center;
+			camera.eye = thirdPersonEye;
+			camera.center = thirdPersonCenter;
+		}
+		else {
+			thirdPersonEye = camera.eye;
+			thirdPersonCenter = camera.center;
+			camera.eye = firstPersonEye;
+			camera.center = firstPersonCenter;
+		}
+		*/
+		firstPerson = !firstPerson;
+	}
 	if (button == GLUT_MIDDLE_BUTTON && state == GLUT_UP)
 		;
 	if (button == GLUT_RIGHT_BUTTON && state == GLUT_DOWN)
@@ -714,7 +964,14 @@ void myReshape(int w, int h)
 	// go back to modelview matrix so we can move the objects about
 	glMatrixMode(GL_MODELVIEW);
 	glLoadIdentity();
-	camera.look();
+	if (freeView)
+		freeCamera.look();
+	else {
+		if (firstPerson)
+			firstPersonCamera.look();
+		else
+			thirdPersonCamera.look();
+	}
 }
 
 //=======================================================================
@@ -739,18 +996,12 @@ void myInit(void)
 	// zNear and zFar:	Specify the front and back clipping planes distances from camera.		 //
 	//*******************************************************************************************//
 
-	// Initialize Camera & Cursor Positions
-	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
-	camera.center = Vector3f(0, 0, 0);
-	camera.eye = Vector3f(20, 10, 20);
-	camera.up = Vector3f(0, 1, 0);
-
 	// Initialize Player Model
 	player.model = model_player;
 
 	// Initialize Player Transformations
 	player.pos = Vector3f(8.0, 0.01, 5.0);
-	player.rot = Vector3f(0.0, 45.0, 0.0);
+	player.rot = Vector3f(0.0, 0.0, 0.0);
 	player.scale = 0.015;
 
 	// Initialize Player Bounds
@@ -782,6 +1033,26 @@ void myInit(void)
 
 	// Initialize Flow Control Variables
 	showBounds = false;
+	freeView = false;
+	firstPerson = false;
+
+	// Initialize Camera & Cursor Positions
+	glutWarpPointer(WIDTH / 2, HEIGHT / 2);
+
+	// First Person View
+	firstPersonCamera.eye = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, -1.5);
+	firstPersonCamera.center = player.pos + Vector3f(0.0, player.bound_height * player.scale * 2, 2);
+	firstPersonCamera.up = Vector3f(0, 1, 0);
+
+	// Third Person View
+	thirdPersonCamera.eye = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, -1.5);
+	thirdPersonCamera.center = player.pos + Vector3f(-0.8, player.bound_height * player.scale * 2, 2);
+	thirdPersonCamera.up = Vector3f(0, 1, 0);
+
+	// Free Roaming
+	freeCamera.center = Vector3f(0, 0, 0);
+	freeCamera.eye = Vector3f(20, 10, 20);
+	freeCamera.up = Vector3f(0, 1, 0);
 
 	initLightSource();
 
@@ -808,7 +1079,8 @@ void LoadAssets()
 
 	// Loading texture files
 	tex_ground.Load("Textures/ground.bmp");
-	loadBMP(&tex, "Textures/blu-sky-3.bmp", true);
+	loadBMP(&day, "Textures/blu-sky-3.bmp", true);
+	loadBMP(&night, "Textures/night.bmp", true);
 }
 void Redisplay(){
 
@@ -819,6 +1091,7 @@ void Redisplay(){
 //=======================================================================
 void main(int argc, char** argv)
 {
+	srand(time(NULL));
 	glutInit(&argc, argv);
 
 	glutInitDisplayMode(GLUT_DOUBLE | GLUT_RGB | GLUT_DEPTH);
@@ -852,8 +1125,6 @@ void main(int argc, char** argv)
 	myInit();
 
 	glEnable(GL_DEPTH_TEST);
-	glEnable(GL_LIGHTING);
-	glEnable(GL_LIGHT0);
 	glEnable(GL_NORMALIZE);
 	glEnable(GL_COLOR_MATERIAL);
 

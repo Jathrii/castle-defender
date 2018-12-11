@@ -20,6 +20,8 @@ public:
 	Vector3f unit();
 
 	Vector3f cross(Vector3f v);
+
+	Vector3f rotateY(float a);
 };
 
 #endif VECTOR3F_H
