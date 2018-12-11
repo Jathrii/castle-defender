@@ -947,11 +947,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
 			view = view * d;
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
+			if (player & Castle) {
+				player.pos = player.pos - Vector3f(view.x, 0, view.z);
+				break;
+			}
 			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
 			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
 			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
 			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
-			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 's':
@@ -965,11 +969,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 			else
 				view = (thirdPersonCamera.center - thirdPersonCamera.eye).unit();
 			view = view * -d;
+			player.pos = player.pos + Vector3f(view.x, 0, view.z);
+			if (player & Castle) {
+				player.pos = player.pos - Vector3f(view.x, 0, view.z);
+				break;
+			}
 			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(view.x, 0, view.z);
 			firstPersonCamera.center = firstPersonCamera.center + Vector3f(view.x, 0, view.z);
 			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(view.x, 0, view.z);
 			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(view.x, 0, view.z);
-			player.pos = player.pos + Vector3f(view.x, 0, view.z);
 		}
 		break;
 	case 'a':
@@ -983,11 +991,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
 			right = right * d;
+			player.pos = player.pos + right;
+			if (player & Castle) {
+				player.pos = player.pos - right;
+				break;
+			}
 			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
 			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
 			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
 			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
-			player.pos = player.pos + right;
 		}
 		break;
 	case 'd':
@@ -1001,11 +1013,15 @@ void myKeyboard(unsigned char key, int x, int y) {
 			else
 				right = thirdPersonCamera.up.cross(thirdPersonCamera.center - thirdPersonCamera.eye).unit();
 			right = right * -d;
+			player.pos = player.pos + right;
+			if (player & Castle) {
+				player.pos = player.pos - right;
+				break;
+			}
 			firstPersonCamera.eye = firstPersonCamera.eye + Vector3f(right.x, 0, right.z);
 			firstPersonCamera.center = firstPersonCamera.center + Vector3f(right.x, 0, right.z);
 			thirdPersonCamera.eye = thirdPersonCamera.eye + Vector3f(right.x, 0, right.z);
 			thirdPersonCamera.center = thirdPersonCamera.center + Vector3f(right.x, 0, right.z);
-			player.pos = player.pos + right;
 		}
 		break;
 	case 'q':
